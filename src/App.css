@@ -1,0 +1,359 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap');
+body {
+	font-family: 'Roboto', sans-serif;
+	margin: 0;
+	padding: 0;
+	scroll-behavior: smooth;
+	background-color: #000;
+	color: #fff;
+}
+
+/* NAVBAR STYLES */
+nav {
+	background-color: rgb(13, 197, 13);
+	padding: 20px;
+}
+
+/* Container for the image and links */
+.navbar-container {
+	display: flex;
+	justify-content: space-between;
+	align-items: center; /* Center items vertically */
+	/* max-width: 1200px; */
+	margin: 0 auto;
+}
+
+/* Logo styling */
+.navbar-logo img {
+	height: 50px; /* Adjust as needed */
+	width: auto;
+}
+
+/* Styling for navbar links */
+.navbar-links button {
+	background: none; /* Remove background */
+	border: none; /* Remove border */
+	color: white; /* White text */
+	text-decoration: none; /* Remove underline */
+	font-size: 16px; /* Set font size */
+	font-weight: bold; /* Set font weight */
+	cursor: pointer; /* Show pointer on hover */
+	padding: 5px 10px; /* Add padding for a clickable area */
+	transition: color 0.3s; /* Add transition for smooth hover effect */
+}
+
+/* Optional: Button hover effect */
+.navbar-links button:hover {
+	text-decoration: underline;
+}
+
+.navbar-links a:hover {
+	text-decoration: underline;
+}
+
+/* SECTIONS STYLES */
+.section {
+	height: 100vh;
+	padding: 2rem;
+	/* border-bottom: 1px solid #ccc; */
+}
+
+/* Styling for the 'tv' div */
+.tv {
+	display: flex;
+	justify-content: space-evenly;
+	align-items: center;
+	margin-bottom: 20px;
+}
+
+.tv img {
+	height: 234px; /* Further increased by 30% from 180px */
+	width: auto; /* Maintain aspect ratio */
+	object-fit: contain; /* Ensures image fits within dimensions */
+}
+.tv img:hover {
+	transform: scale(1.6); /* Slightly scale the image */
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Add a subtle shadow */
+}
+/* Styling for the 'download' div */
+.download {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+	padding: 20px;
+}
+
+.heading {
+	font-size: 2rem;
+	margin-bottom: 10px;
+	align-items: center;
+	text-align: center;
+}
+
+.heading-paragraph {
+	font-size: 1rem;
+	margin-bottom: 30px;
+	align-items: center;
+	text-align: center;
+}
+.support {
+	color: rgb(13, 197, 13);
+}
+.download div:last-child {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr); /* 4 columns */
+	grid-template-rows: 1fr; /* 1 row */
+	gap: 20px;
+	width: 100%;
+}
+
+.download div:last-child a img {
+	height: 280.8px; /* Further increased by 30% from 216px */
+	width: auto; /* Maintain aspect ratio */
+	object-fit: contain;
+}
+.span {
+	color: rgb(13, 197, 13);
+}
+.plans {
+	font-size: 1.5rem;
+}
+.contact-section {
+	max-width: 800px; /* Increased width for the form */
+	margin: 0 auto;
+	padding: 20px;
+	font-family: Arial, sans-serif;
+
+	h1 {
+		font-size: 2rem;
+		text-align: center;
+		margin-bottom: 10px;
+	}
+
+	.contact-form {
+		display: flex;
+		flex-direction: column;
+		gap: 15px;
+		background-color: #808080; /* Gray background */
+		padding: 30px;
+		border-radius: 10px;
+		border: 2px solid #fff; /* White border */
+		box-sizing: border-box; /* Ensure padding doesn't affect width */
+	}
+
+	.form-group {
+		display: flex;
+		flex-direction: column;
+	}
+
+	label {
+		margin-bottom: 5px;
+		font-weight: bold;
+		color: #000; /* Text color changed to black */
+	}
+
+	input,
+	textarea {
+		padding: 10px;
+		font-size: 1rem;
+		border: 1px solid #ccc;
+		border-radius: 5px;
+		color: #000; /* Black text color for inputs */
+		width: 100%; /* Ensure consistent width for all inputs and textarea */
+		box-sizing: border-box; /* Include padding in width */
+	}
+
+	textarea {
+		resize: none; /* Prevent resizing */
+		height: 120px; /* Fixed height for the textarea */
+	}
+
+	.submit-button:hover {
+		background-color: #0056b3;
+	}
+}
+
+.plans-section {
+	padding: 2rem;
+	/* background-color: #f9f9f9; */
+}
+
+.plans-grid {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 2rem;
+	justify-content: center;
+}
+
+.plan-card {
+	text-decoration: none;
+	/* background: white; */
+	/* border: 1px solid #ddd; */
+	/* border-radius: 8px; */
+	width: 200px;
+	padding: 1rem;
+	text-align: center;
+	color: black;
+	transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.plan-card:hover {
+	transform: scale(1.05);
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+h3 {
+	color: #000;
+}
+.plan-image {
+	width: 100%;
+	border-radius: 8px;
+	margin-bottom: 1rem;
+}
+.subscribe-form-container,
+.transaction-details-container {
+	padding: 2rem;
+	text-align: center;
+}
+
+.subscribe-form {
+	margin: 0 auto;
+	max-width: 800px; /* Wider form */
+	background-color: #f9f9f9;
+	padding: 2rem;
+	border-radius: 8px;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	text-align: left; /* Align form content to the left */
+}
+
+.subscribe-form h1 {
+	margin-bottom: 1rem;
+	color: #000;
+}
+
+.subscribe-form p {
+	margin-bottom: 2rem;
+	font-size: 0.9rem;
+	color: #000;
+}
+
+.form-row {
+	display: flex;
+	justify-content: space-between;
+	gap: 1rem; /* Space between name and email inputs */
+	margin-bottom: 1rem;
+}
+
+.subscribe-form label {
+	display: block;
+	font-size: 1rem;
+	color: #000;
+	margin-bottom: 0.5rem;
+}
+
+.subscribe-form input,
+.subscribe-form select {
+	width: 100%;
+	padding: 0.75rem;
+	margin-top: 0.5rem;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	font-size: 1rem;
+	box-sizing: border-box; /* Consistent box model */
+}
+
+.form-row label {
+	flex: 1; /* Flex for equal width of name and email fields */
+}
+
+.subscribe-form select {
+	width: 100%; /* Ensure it spans the width of both inputs above */
+	margin-bottom: 1rem;
+}
+
+.button {
+	width: 25%; /* Small button */
+	padding: 0.5rem;
+	background-color: rgb(13, 197, 13); /* Greenyellow background */
+	color: black; /* Black text for contrast */
+	border: none;
+	border-radius: 4px;
+	font-size: 1rem;
+	cursor: pointer;
+	text-align: center;
+}
+.text-danger {
+	color: red;
+}
+
+.footer-container {
+	display: flex;
+	/* flex-direction: column; */
+	justify-content: space-between;
+	align-items: center;
+	background-color: rgb(13, 197, 13);
+	color: #fff;
+	padding: 20px;
+	gap: 15px;
+	text-align: center;
+}
+
+.footer-copyright {
+	font-size: 14px;
+}
+
+.footer-links,
+.footer-social-media {
+	display: flex;
+	gap: 15px;
+}
+
+.footer-link,
+.social-link {
+	color: #fff;
+	text-decoration: none;
+	font-size: 16px;
+	transition: color 0.3s ease;
+}
+.faq-container {
+	display: flex; /* Enable Flexbox */
+	justify-content: space-between; /* Distribute space between items */
+	padding: 20px;
+}
+
+.contentBar {
+	flex: 1; /* Take up 1 part of the available space */
+	display: flex; /* Flexbox for links */
+	flex-direction: column; /* Stack the links vertically */
+	gap: 10px; /* Space between links */
+}
+.contentBar a {
+	text-decoration: none;
+	color: #fff;
+	font-size: 1.5rem;
+}
+.faq-content {
+	flex: 3; /* Take up 3 parts of the available space */
+}
+.faq-content h1{
+    
+}
+/* Adjust for responsiveness */
+@media (max-width: 768px) {
+	.tv img,
+	.download div:last-child a img {
+		height: 187.2px; /* Further increased by 30% from 144px */
+	}
+
+	.download div:last-child {
+		grid-template-columns: repeat(2, 1fr); /* Switch to 2 columns */
+	}
+	.footer-container {
+		flex-direction: column;
+		text-align: left;
+		align-items: start;
+	}
+	.footer-links {
+		flex-direction: column;
+	}
+}
