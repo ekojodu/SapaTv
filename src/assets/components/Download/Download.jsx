@@ -1,4 +1,3 @@
-
 const Download = () => {
 	return (
 		<div>
@@ -43,8 +42,8 @@ const Download = () => {
 			</div>
 			<p className='heading-paragraph'>
 				If your TV supports <span>USB flash drive</span> just download the APK
-				and use the flash drive to install it. <br /> For more installation
-				related questions, please consult <span>support@sapatv.ng</span>
+				and use the flash drive to install it. For more installation related
+				questions, please consult <span>support@sapatv.ng</span>
 			</p>
 		</div>
 	);

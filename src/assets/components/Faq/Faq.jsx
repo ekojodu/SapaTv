@@ -85,7 +85,7 @@ const Faq = () => {
 															<div>
 																<span>
 																	{' '}
-																	&nbsp; <br />
+																	&nbsp;
 																	<u>
 																		<strong>TV Box:</strong>
 																	</u>

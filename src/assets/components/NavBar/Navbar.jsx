@@ -1,32 +1,47 @@
-import { useNavigate } from 'react-router-dom'; // Removed Link
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
-	const navigate = useNavigate(); // Declare the useNavigate hook here
+	const navigate = useNavigate();
+	const [menuOpen, setMenuOpen] = useState(false);
 
 	const handleScrollToSection = (sectionId) => {
+		// Close the menu when a link is clicked
+		setMenuOpen(false);
+
 		// Navigate to the homepage (root route)
 		navigate('/');
 
 		// Use setTimeout to ensure navigation has occurred before scrolling
 		setTimeout(() => {
-			// Scroll to the desired section after navigation
 			document
 				.getElementById(sectionId)
 				?.scrollIntoView({ behavior: 'smooth' });
-		}, 100); // Adjust the timeout if necessary to ensure the page has loaded
+		}, 100);
+	};
+
+	const toggleMenu = () => {
+		setMenuOpen(!menuOpen); // Toggle menu visibility
 	};
 
 	return (
 		<nav>
 			<div className='navbar-container'>
-				{/* Add an image to the navbar */}
+				{/* Navbar logo */}
 				<div className='navbar-logo'>
 					<img src='src/assets/images/sapaLogo.png' alt='Logo' />
 				</div>
 
-				{/* Navbar Links */}
-				<div className='navbar-links'>
-					{/* Removed Link, directly using button onClick */}
+				{/* Menu Icon for small screens */}
+				<div className='menu-icon' onClick={toggleMenu}>
+					{/* Simple hamburger icon */}
+					<div className='menu-bar'></div>
+					<div className='menu-bar'></div>
+					<div className='menu-bar'></div>
+				</div>
+
+				{/* Navbar links */}
+				<div className={`navbar-links ${menuOpen ? 'show' : ''}`}>
 					<button onClick={() => handleScrollToSection('home')}>Home</button>
 					<button onClick={() => handleScrollToSection('plans')}>Plans</button>
 					<button onClick={() => handleScrollToSection('download')}>

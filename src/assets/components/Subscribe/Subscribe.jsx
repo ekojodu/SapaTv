@@ -24,8 +24,7 @@ const Subscribe = () => {
 	return (
 		<div className='subscribe-form-container'>
 			<h1>Subscribe</h1>
-			<br />
-			<br />
+
 			<form className='subscribe-form' onSubmit={handleSubmit}>
 				<h1>Get Started</h1>
 				{plan && (

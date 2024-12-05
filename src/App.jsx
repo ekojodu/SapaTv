@@ -11,6 +11,8 @@ import ErrorBoundary from './assets/components/ErrorBoundary/ErrorBoundary'; // 
 import CompleteTransaction from './assets/components/CompleteTransaction/CompleteTransaction';
 import Footer from './assets/components/Footer/Footer';
 import Faq from './assets/components/Faq/Faq';
+import Reseller from './assets/components/Reseller/Reseller';
+import ResellerPayment from './assets/components/ResellerPayment/ResellerPayment';
 
 const App = () => {
 	return (
@@ -60,6 +62,22 @@ const App = () => {
 								}
 							/>
 							<Route path='/faq' element={<Faq />} />
+							<Route
+								path='/reseller'
+								element={
+									<ErrorBoundary>
+										<Reseller />
+									</ErrorBoundary>
+								}
+							/>
+							<Route
+								path='/resellerPayment'
+								element={
+									<ErrorBoundary>
+										<ResellerPayment />
+									</ErrorBoundary>
+								}
+							/>
 						</Routes>
 					</main>
 				</ErrorBoundary>

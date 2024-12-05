@@ -14,41 +14,78 @@ nav {
 	padding: 20px;
 }
 
-/* Container for the image and links */
 .navbar-container {
 	display: flex;
 	justify-content: space-between;
-	align-items: center; /* Center items vertically */
-	/* max-width: 1200px; */
+	align-items: center;
 	margin: 0 auto;
+	position: relative;
 }
 
 /* Logo styling */
 .navbar-logo img {
-	height: 50px; /* Adjust as needed */
+	height: 50px;
 	width: auto;
 }
 
-/* Styling for navbar links */
-.navbar-links button {
-	background: none; /* Remove background */
-	border: none; /* Remove border */
-	color: white; /* White text */
-	text-decoration: none; /* Remove underline */
-	font-size: 16px; /* Set font size */
-	font-weight: bold; /* Set font weight */
-	cursor: pointer; /* Show pointer on hover */
-	padding: 5px 10px; /* Add padding for a clickable area */
-	transition: color 0.3s; /* Add transition for smooth hover effect */
+/* Navbar links */
+.navbar-links {
+	display: flex;
+	gap: 15px;
 }
 
-/* Optional: Button hover effect */
+/* Links hidden on smaller screens */
+.navbar-links button {
+	background: none;
+	border: none;
+	color: white;
+	text-decoration: none;
+	font-size: 16px;
+	font-weight: bold;
+	cursor: pointer;
+	padding: 5px 10px;
+	transition: color 0.3s;
+}
+
 .navbar-links button:hover {
 	text-decoration: underline;
 }
 
-.navbar-links a:hover {
-	text-decoration: underline;
+/* Menu Icon */
+.menu-icon {
+	display: none; /* Hide by default */
+	flex-direction: column;
+	gap: 5px;
+	cursor: pointer;
+}
+
+.menu-bar {
+	width: 25px;
+	height: 3px;
+	background-color: white;
+	transition: transform 0.3s;
+}
+
+/* Show menu icon and hide links on smaller screens */
+@media (max-width: 768px) {
+	.menu-icon {
+		display: flex; /* Show menu icon */
+	}
+
+	.navbar-links {
+		display: none; /* Hide links by default */
+		flex-direction: column; /* Stack links vertically */
+		position: absolute;
+		top: 60px;
+		right: 0;
+		background-color: rgb(13, 197, 13); /* Match navbar color */
+		padding: 10px;
+		width: 100%; /* Full width for dropdown */
+	}
+
+	.navbar-links.show {
+		display: flex; /* Show links when menu is open */
+	}
 }
 
 /* SECTIONS STYLES */
@@ -58,7 +95,7 @@ nav {
 	/* border-bottom: 1px solid #ccc; */
 }
 
-/* Styling for the 'tv' div */
+/* Existing 'tv' styles (unchanged) */
 .tv {
 	display: flex;
 	justify-content: space-evenly;
@@ -71,10 +108,26 @@ nav {
 	width: auto; /* Maintain aspect ratio */
 	object-fit: contain; /* Ensures image fits within dimensions */
 }
+
 .tv img:hover {
 	transform: scale(1.6); /* Slightly scale the image */
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Add a subtle shadow */
 }
+
+/* Responsive styling */
+@media screen and (max-width: 768px) {
+	.tv {
+		flex-direction: column; /* Stack images vertically */
+		gap: 20px; /* Add spacing between images */
+	}
+}
+
+@media screen and (max-width: 480px) {
+	.tv img {
+		height: 180px; /* Slightly smaller height for smaller screens */
+	}
+}
+
 /* Styling for the 'download' div */
 .download {
 	display: flex;
@@ -315,6 +368,7 @@ h3 {
 	font-size: 16px;
 	transition: color 0.3s ease;
 }
+/* Existing styles (unchanged) */
 .faq-container {
 	display: flex; /* Enable Flexbox */
 	justify-content: space-between; /* Distribute space between items */
@@ -327,17 +381,48 @@ h3 {
 	flex-direction: column; /* Stack the links vertically */
 	gap: 10px; /* Space between links */
 }
+
 .contentBar a {
 	text-decoration: none;
 	color: #fff;
 	font-size: 1.5rem;
 }
+
 .faq-content {
 	flex: 3; /* Take up 3 parts of the available space */
 }
-.faq-content h1{
-    
+
+.faq-content h1 {
 }
+
+/* Responsive styling */
+@media screen and (max-width: 768px) {
+	.faq-container {
+		flex-direction: column; /* Stack contentBar and faq-content vertically */
+		gap: 20px; /* Add spacing between stacked sections */
+		align-items: center; /* Center items horizontally */
+	}
+
+	.contentBar {
+		width: 100%; /* Allow links to take full width */
+		align-items: center; /* Center links horizontally */
+	}
+
+	.contentBar a {
+		text-align: center; /* Center-align text */
+	}
+}
+
+@media screen and (max-width: 480px) {
+	.contentBar a {
+		font-size: 1.2rem; /* Reduce font size for smaller screens */
+	}
+
+	.faq-content {
+		padding: 10px; /* Reduce padding for smaller screens */
+	}
+}
+
 /* Adjust for responsiveness */
 @media (max-width: 768px) {
 	.tv img,
