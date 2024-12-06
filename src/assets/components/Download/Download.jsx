@@ -5,6 +5,7 @@ import mobileDownload from '/src/assets/images/Mobile_download.png';
 import tvBox from '/src/assets/images/TVBox_download.png';
 import smartTv from '/src/assets/images/smartTV_download.png';
 import tvStick from '/src/assets/images/TVStick_download.png';
+import React from 'react';
 const Download = () => {
 	return (
 		<div>
