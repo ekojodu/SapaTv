@@ -1,11 +1,10 @@
-import sports from '../../assets/images/All-Sports-Showdown-button.png';
-import live from '../../assets/images/Live-Channel-button.png';
-import movies from '../../assets/images/Movies&Series-button.png';
-import mobileDownload from '../../assets/images/Mobile_download.png';
-import tvBox from '../../assets/images/TVBox_download.png';
-import smartTv from '../../assets/images/smartTV_download.png';
-import tvStick from '../../assets/images/TVStick_download.png';
-
+import sports from '/src/assets/images/All-Sports-Showdown-button.png';
+import live from '/src/assets/images/Live-Channel-button.png';
+import movies from '/src/assets/images/Movies&Series-button.png';
+import mobileDownload from '/src/assets/images/Mobile_download.png';
+import tvBox from '/src/assets/images/TVBox_download.png';
+import smartTv from '/src/assets/images/smartTV_download.png';
+import tvStick from '/src/assets/images/TvStick_download.png';
 const Download = () => {
 	return (
 		<div>
