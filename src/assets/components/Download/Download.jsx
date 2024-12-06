@@ -2,9 +2,9 @@ const Download = () => {
 	return (
 		<div>
 			<div className='tv'>
-				<img src='src/assets/images/All-Sports-Showdown-button.png' alt='' />
-				<img src='src/assets/images/Live-Channel-button.png' alt='' />
-				<img src='src/assets/images/Movies&Series-button.png' alt='' />
+				<img src='/src/assets/images/All-Sports-Showdown-button.png' alt='' />
+				<img src='/src/assets/images/Live-Channel-button.png' alt='' />
+				<img src='/src/assets/images/Movies&Series-button.png' alt='' />
 			</div>
 			<div className='download'>
 				<div>
