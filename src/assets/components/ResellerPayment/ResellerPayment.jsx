@@ -1,23 +1,33 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
 const ResellerPayment = () => {
 	const location = useLocation();
-	const navigate = useNavigate();
 
-	// Retrieve the totalCost passed via state from Reseller page
-	const { totalCost } = location.state || { totalCost: 0 };
+	// Retrieve the totalCost, plans, and quantities passed via state from Reseller page
+	const { totalCost, plans, quantities } = location.state || {
+		totalCost: 0,
+		plans: [],
+		quantities: {},
+	};
 
 	// Generate the reference number when the page loads
 	const [referenceNumber, setReferenceNumber] = useState('');
 
 	useEffect(() => {
 		// Generate a reference number on page load
-		const generatedReferenceNumber = Math.random()
-			.toString(36)
-			.substr(2, 9)
-			.toUpperCase();
-		setReferenceNumber(generatedReferenceNumber);
+		const generateReferenceNumber = () => {
+			const chars =
+				'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+			let reference = '';
+			for (let i = 0; i < 10; i++) {
+				reference += chars.charAt(Math.floor(Math.random() * chars.length));
+			}
+			return reference;
+		};
+
+		// Set the generated reference number
+		setReferenceNumber(generateReferenceNumber());
 	}, []);
 
 	const [formData, setFormData] = useState({ name: '', email: '' });
@@ -36,51 +46,8 @@ const ResellerPayment = () => {
 			return;
 		}
 
-		// Prepare data to send to the backend
-		const requestData = {
-			name: formData.name,
-			email: formData.email,
-			totalCost,
-			referenceNumber,
-		};
-
-		// try {
-		// 	// Send request to backend to generate purchase code
-		// 	const response = await fetch(
-		// 		'https://your-backend-api.com/generate-code',
-		// 		{
-		// 			method: 'POST',
-		// 			headers: {
-		// 				'Content-Type': 'application/json',
-		// 			},
-		// 			body: JSON.stringify(requestData),
-		// 		}
-		// 	);
-
-		// 	const data = await response.json();
-
-		// 	if (response.ok) {
-		// 		// Successful response, show the code to the user
-		// 		alert(`Payment initiated with reference: ${referenceNumber}`);
-
-		// 		// Navigate to a success page with the response data
-		// 		navigate('/payment-success', {
-		// 			state: {
-		// 				reference: referenceNumber,
-		// 				totalCost,
-		// 				...formData,
-		// 				purchaseCode: data.purchaseCode,
-		// 			},
-		// 		});
-		// 	} else {
-		// 		// Handle backend errors (e.g., failed payment, backend issues)
-		// 		alert(`Error: ${data.message || 'Payment failed'}`);
-		// 	}
-		// } catch {
-		// 	alert(
-		// 		'An error occurred while processing your payment. Please try again.'
-		// 	);
-		// }
+		// Simulating form submission logic
+		alert('Payment processing...');
 	};
 
 	return (
@@ -98,6 +65,24 @@ const ResellerPayment = () => {
 				<p>
 					Your payment reference number is: <strong>{referenceNumber}</strong>
 				</p>
+
+				{/* Display purchased plans and their quantities */}
+				<h3>Purchased Plans:</h3>
+				{plans.length > 0 ? (
+					<ul style={{ paddingLeft: '20px' }}>
+						{plans.map((plan) => (
+							<li key={plan.id} style={{ marginBottom: '10px' }}>
+								{plan.name} - Quantity: {quantities[plan.id] || 0}
+								{quantities[plan.id] > 0 && (
+									<span> (₦{plan.price * quantities[plan.id]})</span>
+								)}
+							</li>
+						))}
+					</ul>
+				) : (
+					<p>No plans selected</p>
+				)}
+
 				<label>
 					Name: <span style={{ color: 'red' }}>*</span>
 					<input
@@ -116,6 +101,7 @@ const ResellerPayment = () => {
 						}}
 					/>
 				</label>
+
 				<label>
 					Email: <span style={{ color: 'red' }}>*</span>
 					<input
@@ -134,6 +120,7 @@ const ResellerPayment = () => {
 						}}
 					/>
 				</label>
+
 				<button
 					type='submit'
 					style={{

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const Reseller = () => {
 	const plans = [
@@ -10,7 +10,6 @@ const Reseller = () => {
 	];
 
 	const [quantities, setQuantities] = useState({});
-	const navigate = useNavigate();
 
 	const totalCost = plans.reduce(
 		(total, plan) => total + (quantities[plan.id] || 0) * plan.price,
@@ -22,15 +21,7 @@ const Reseller = () => {
 		setQuantities({ ...quantities, [id]: quantity });
 	};
 
-	const handlePayment = () => {
-		// Passing totalCost correctly to ResellerPayment
-		navigate('/resellerPayment', {
-			state: {
-				totalCost, // Passing the total cost correctly
-			},
-		});
-	};
-
+	// Passing totalCost, plans, and quantities via Link's state
 	return (
 		<div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
 			<h2>Reseller Plans</h2>
@@ -75,8 +66,16 @@ const Reseller = () => {
 				))}
 				<hr />
 				<h3 style={{ color: '#000' }}>Total: ₦{totalCost}</h3>
-				<button
-					onClick={handlePayment}
+				{/* Using Link to pass data as state */}
+				<Link
+					to={{
+						pathname: '/resellerPayment',
+						state: {
+							totalCost, // Total cost
+							plans, // Plans array
+							quantities, // Quantities object
+						},
+					}}
 					style={{
 						backgroundColor: 'rgb(13, 197, 13)',
 						color: '#fff',
@@ -85,10 +84,12 @@ const Reseller = () => {
 						borderRadius: '5px',
 						cursor: 'pointer',
 						fontSize: '16px',
+						textDecoration: 'none',
+						display: 'inline-block',
 					}}
 				>
 					Make Payment
-				</button>
+				</Link>
 			</form>
 		</div>
 	);
