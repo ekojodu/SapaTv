@@ -13,10 +13,10 @@ const Footer = () => {
 			{/* Links Section */}
 			<div className='footer-links'>
 				<span onClick={() => navigate('/faq')} className='footer-link'>
-					FAQ
+					<b>FAQ</b>
 				</span>
 				<span onClick={() => navigate('/reseller')} className='footer-link'>
-					Reseller Info
+					<b>Resellers</b>
 				</span>
 			</div>
 
