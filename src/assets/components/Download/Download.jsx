@@ -1,10 +1,13 @@
+import sports from '/src/assets/images/All-Sports-Showdown-button.png';
+import live from '/src/assets/images/Live-Channel-button.png';
+import movies from '/src/assets/images/Movies&Series-button.png';
 const Download = () => {
 	return (
 		<div>
 			<div className='tv'>
-				<img src='/src/assets/images/All-Sports-Showdown-button.png' alt='' />
-				<img src='/src/assets/images/Live-Channel-button.png' alt='' />
-				<img src='/src/assets/images/Movies&Series-button.png' alt='' />
+				<img src={sports} alt='' />
+				<img src={live} alt='' />
+				<img src={movies} alt='' />
 			</div>
 			<div className='download'>
 				<div>
