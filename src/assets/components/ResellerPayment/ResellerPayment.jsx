@@ -44,43 +44,43 @@ const ResellerPayment = () => {
 			referenceNumber,
 		};
 
-		try {
-			// Send request to backend to generate purchase code
-			const response = await fetch(
-				'https://your-backend-api.com/generate-code',
-				{
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify(requestData),
-				}
-			);
+		// try {
+		// 	// Send request to backend to generate purchase code
+		// 	const response = await fetch(
+		// 		'https://your-backend-api.com/generate-code',
+		// 		{
+		// 			method: 'POST',
+		// 			headers: {
+		// 				'Content-Type': 'application/json',
+		// 			},
+		// 			body: JSON.stringify(requestData),
+		// 		}
+		// 	);
 
-			const data = await response.json();
+		// 	const data = await response.json();
 
-			if (response.ok) {
-				// Successful response, show the code to the user
-				alert(`Payment initiated with reference: ${referenceNumber}`);
+		// 	if (response.ok) {
+		// 		// Successful response, show the code to the user
+		// 		alert(`Payment initiated with reference: ${referenceNumber}`);
 
-				// Navigate to a success page with the response data
-				navigate('/payment-success', {
-					state: {
-						reference: referenceNumber,
-						totalCost,
-						...formData,
-						purchaseCode: data.purchaseCode,
-					},
-				});
-			} else {
-				// Handle backend errors (e.g., failed payment, backend issues)
-				alert(`Error: ${data.message || 'Payment failed'}`);
-			}
-		} catch {
-			alert(
-				'An error occurred while processing your payment. Please try again.'
-			);
-		}
+		// 		// Navigate to a success page with the response data
+		// 		navigate('/payment-success', {
+		// 			state: {
+		// 				reference: referenceNumber,
+		// 				totalCost,
+		// 				...formData,
+		// 				purchaseCode: data.purchaseCode,
+		// 			},
+		// 		});
+		// 	} else {
+		// 		// Handle backend errors (e.g., failed payment, backend issues)
+		// 		alert(`Error: ${data.message || 'Payment failed'}`);
+		// 	}
+		// } catch {
+		// 	alert(
+		// 		'An error occurred while processing your payment. Please try again.'
+		// 	);
+		// }
 	};
 
 	return (
