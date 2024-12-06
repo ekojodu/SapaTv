@@ -18,25 +18,25 @@ const Download = () => {
 						href='https://sapatv.xyz/sapatv/mobile/MobileSapa_TV_mob_r_0002_1.0.0_20240719_mobile.apk'
 						download
 					>
-						<img src='src/assets/images/Mobile_download.png' alt='' />
+						<img src='/src/assets/images/Mobile_download.png' alt='' />
 					</a>
 					<a
 						href='https://sapatv.xyz/sapatv/stb/SapaTV_stb_r_0002_1.0.0_20240719_stb.apk'
 						download
 					>
-						<img src='src/assets/images/TVBox_download.png' alt='' />
+						<img src='/src/assets/images/TVBox_download.png' alt='' />
 					</a>
 					<a
 						href='https://sapatv.xyz/sapatv/stb/SapaTV_stb_r_0002_1.0.0_20240719_stb.apk'
 						download=''
 					>
-						<img src='src/assets/images/smartTV_download.png' alt='' />
+						<img src='/src/assets/images/smartTV_download.png' alt='' />
 					</a>
 					<a
 						href='https://sapatv.xyz/sapatv/stb/SapaTV_stb_r_0002_1.0.0_20240719_stb.apk'
 						download=''
 					>
-						<img src='src/assets/images/TVStick_download.png' alt='' />
+						<img src='/src/assets/images/TVStick_download.png' alt='' />
 					</a>
 				</div>
 			</div>

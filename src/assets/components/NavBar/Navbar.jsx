@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import logo from '/src/assets/images/sapaLogo.png';
 
 const Navbar = () => {
 	const navigate = useNavigate();
@@ -29,7 +30,7 @@ const Navbar = () => {
 			<div className='navbar-container'>
 				{/* Navbar logo */}
 				<div className='navbar-logo'>
-					<img src='src/assets/images/sapaLogo.png' alt='Logo' />
+					<img src={logo} alt='Logo' />
 				</div>
 
 				{/* Menu Icon for small screens */}
