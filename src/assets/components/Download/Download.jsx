@@ -1,6 +1,10 @@
 import sports from '/src/assets/images/All-Sports-Showdown-button.png';
 import live from '/src/assets/images/Live-Channel-button.png';
 import movies from '/src/assets/images/Movies&Series-button.png';
+import mobileDownload from '/src/assets/images/Mobile_download.png';
+import tvBox from '/src/assets/images/TVBox_download.png';
+import smartTv from '/src/assets/images/smartTV_download.png';
+import tvStick from '/src/assets/images/TVStick_download.png';
 const Download = () => {
 	return (
 		<div>
@@ -21,25 +25,25 @@ const Download = () => {
 						href='https://sapatv.xyz/sapatv/mobile/MobileSapa_TV_mob_r_0002_1.0.0_20240719_mobile.apk'
 						download
 					>
-						<img src='/src/assets/images/Mobile_download.png' alt='' />
+						<img src={mobileDownload} alt='' />
 					</a>
 					<a
 						href='https://sapatv.xyz/sapatv/stb/SapaTV_stb_r_0002_1.0.0_20240719_stb.apk'
 						download
 					>
-						<img src='/src/assets/images/TVBox_download.png' alt='' />
+						<img src={tvBox} alt='' />
 					</a>
 					<a
 						href='https://sapatv.xyz/sapatv/stb/SapaTV_stb_r_0002_1.0.0_20240719_stb.apk'
 						download=''
 					>
-						<img src='/src/assets/images/smartTV_download.png' alt='' />
+						<img src={smartTv} alt='' />
 					</a>
 					<a
 						href='https://sapatv.xyz/sapatv/stb/SapaTV_stb_r_0002_1.0.0_20240719_stb.apk'
 						download=''
 					>
-						<img src='/src/assets/images/TVStick_download.png' alt='' />
+						<img src={tvStick} alt='' />
 					</a>
 				</div>
 			</div>
