@@ -1,7 +1,6 @@
-import { useNavigate } from 'react-router-dom';
+
 
 const Footer = () => {
-	const navigate = useNavigate();
 
 	return (
 		<div className='footer-container'>
@@ -12,12 +11,7 @@ const Footer = () => {
 
 			{/* Links Section */}
 			<div className='footer-links'>
-				<span onClick={() => navigate('/faq')} className='footer-link'>
-					<b>FAQ</b>
-				</span>
-				<span onClick={() => navigate('/reseller')} className='footer-link'>
-					<b>Resellers</b>
-				</span>
+				
 			</div>
 
 			{/* Social Media Section */}

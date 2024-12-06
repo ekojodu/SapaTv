@@ -21,6 +21,12 @@ const Navbar = () => {
 		}, 100);
 	};
 
+	const handleNavigation = (path) => {
+		// Close the menu when navigating to a different page
+		setMenuOpen(false);
+		navigate(path);
+	};
+
 	const toggleMenu = () => {
 		setMenuOpen(!menuOpen); // Toggle menu visibility
 	};
@@ -50,6 +56,18 @@ const Navbar = () => {
 					</button>
 					<button onClick={() => handleScrollToSection('contact')}>
 						Contact
+					</button>
+					<button
+						onClick={() => handleNavigation('/faq')}
+						className='footer-link'
+					>
+						<b>FAQ</b>
+					</button>
+					<button
+						onClick={() => handleNavigation('/reseller')}
+						className='footer-link'
+					>
+						<b>Resellers</b>
 					</button>
 				</div>
 			</div>
