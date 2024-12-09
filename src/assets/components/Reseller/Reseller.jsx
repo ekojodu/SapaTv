@@ -10,7 +10,7 @@
 // 	];
 
 // 	const [quantities, setQuantities] = useState({});
-// 	const navigate = useNavigate(); // Use the navigate hook
+// 	const navigate = useNavigate();
 
 // 	// Calculate the total cost based on selected quantities
 // 	const totalCost = plans.reduce(
@@ -19,7 +19,9 @@
 // 	);
 
 // 	const handleQuantityChange = (id, value) => {
-// 		const quantity = Number.isNaN(parseInt(value)) ? 0 : Math.max(0, parseInt(value));
+// 		const quantity = Number.isNaN(parseInt(value))
+// 			? 0
+// 			: Math.max(0, parseInt(value));
 // 		setQuantities((prevQuantities) => ({
 // 			...prevQuantities,
 // 			[id]: quantity,
@@ -27,12 +29,11 @@
 // 	};
 
 // 	const handleProceedToPayment = (e) => {
-// 		e.preventDefault(); // Prevent form submission
+// 		e.preventDefault();
 // 		if (totalCost <= 0) {
 // 			alert('Please select at least one plan.');
 // 			return;
 // 		}
-// 		// Navigate to '/resellerPayment' and pass state
 // 		navigate('/resellerPayment', {
 // 			state: {
 // 				totalCost: totalCost,
@@ -41,8 +42,6 @@
 // 			},
 // 		});
 // 	};
-
-// 	console.log(totalCost, plans, quantities);
 
 // 	return (
 // 		<div
@@ -53,7 +52,15 @@
 // 				fontFamily: 'Arial, sans-serif',
 // 			}}
 // 		>
-// 			<h2 style={{ textAlign: 'center', color: '#fff' }}>Choose Your Plans</h2>
+// 			<h2
+// 				style={{
+// 					textAlign: 'center',
+// 					color: '#fff',
+// 					fontSize: 'clamp(1.5rem, 3vw, 2rem)',
+// 				}}
+// 			>
+// 				Choose Your Plans
+// 			</h2>
 
 // 			<form
 // 				style={{
@@ -68,6 +75,7 @@
 // 						key={plan.id}
 // 						style={{
 // 							display: 'flex',
+// 							flexWrap: 'wrap',
 // 							justifyContent: 'space-between',
 // 							alignItems: 'center',
 // 							marginBottom: '20px',
@@ -76,17 +84,24 @@
 // 							color: '#000',
 // 						}}
 // 					>
-// 						<div style={{ flex: 1 }}>
-// 							<h4 style={{ margin: '0 0 5px 0', fontSize: '18px' }}>
+// 						<div style={{ flex: 1, minWidth: '200px' }}>
+// 							<h4
+// 								style={{
+// 									margin: '0 0 5px 0',
+// 									fontSize: 'clamp(1rem, 2.5vw, 1.2rem)',
+// 								}}
+// 							>
 // 								{plan.name}
 // 							</h4>
-// 							<p style={{ margin: '0', fontSize: '16px' }}>₦{plan.price}</p>
+// 							<p style={{ margin: '0', fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}>
+// 								₦{plan.price}
+// 							</p>
 // 						</div>
-// 						<div style={{ flex: 0.3 }}>
+// 						<div style={{ flex: 0.3, minWidth: '120px', marginTop: '10px' }}>
 // 							<label
 // 								htmlFor={`quantity-${plan.id}`}
 // 								style={{
-// 									fontSize: '14px',
+// 									fontSize: 'clamp(0.8rem, 2vw, 1rem)',
 // 									color: '#000',
 // 									marginRight: '10px',
 // 								}}
@@ -116,14 +131,13 @@
 // 						textAlign: 'right',
 // 					}}
 // 				>
-// 					<h3 style={{ color: '#333' }}>
+// 					<h3 style={{ color: '#333', fontSize: 'clamp(1rem, 2.5vw, 1.5rem)' }}>
 // 						Total Cost: <span style={{ color: 'green' }}>₦{totalCost}</span>
 // 					</h3>
 // 				</div>
-// 				{/* Make Payment Button */}
 // 				<div style={{ textAlign: 'center', marginTop: '20px' }}>
 // 					<button
-// 						onClick={handleProceedToPayment} // Trigger navigation here
+// 						onClick={handleProceedToPayment}
 // 						style={{
 // 							backgroundColor: 'rgb(13, 197, 13)',
 // 							color: '#fff',
@@ -131,7 +145,7 @@
 // 							padding: '12px 30px',
 // 							borderRadius: '5px',
 // 							cursor: 'pointer',
-// 							fontSize: '18px',
+// 							fontSize: 'clamp(1rem, 2.5vw, 1.2rem)',
 // 							transition: 'background-color 0.3s',
 // 						}}
 // 						onMouseEnter={(e) => (e.target.style.backgroundColor = 'green')}
@@ -161,6 +175,8 @@ const Reseller = () => {
 	];
 
 	const [quantities, setQuantities] = useState({});
+	const [name, setName] = useState('');
+	const [email, setEmail] = useState('');
 	const navigate = useNavigate();
 
 	// Calculate the total cost based on selected quantities
@@ -185,11 +201,19 @@ const Reseller = () => {
 			alert('Please select at least one plan.');
 			return;
 		}
+		if (!name || !email) {
+			alert('Please enter your name and email.');
+			return;
+		}
+
+		// Pass the details to the payment page
 		navigate('/resellerPayment', {
 			state: {
-				totalCost: totalCost,
+				name,
+				email,
+				totalCost,
 				plans: plans.filter((plan) => quantities[plan.id] > 0),
-				quantities: quantities,
+				quantities,
 			},
 		});
 	};
@@ -221,6 +245,62 @@ const Reseller = () => {
 					boxShadow: '0 2px 6px rgba(0, 0, 0, 0.1)',
 				}}
 			>
+				{/* Name and Email Fields */}
+				<div style={{ marginBottom: '20px' }}>
+					<label
+						htmlFor='name'
+						style={{
+							display: 'block',
+							marginBottom: '5px',
+							fontSize: 'clamp(0.9rem, 2vw, 1rem)',
+							color: '#000',
+						}}
+					>
+						Name:
+					</label>
+					<input
+						id='name'
+						type='text'
+						value={name}
+						onChange={(e) => setName(e.target.value)}
+						style={{
+							width: '100%',
+							padding: '8px',
+							borderRadius: '4px',
+							border: '1px solid #ccc',
+						}}
+						required
+					/>
+				</div>
+
+				<div style={{ marginBottom: '20px' }}>
+					<label
+						htmlFor='email'
+						style={{
+							display: 'block',
+							marginBottom: '5px',
+							fontSize: 'clamp(0.9rem, 2vw, 1rem)',
+							color: '#000',
+						}}
+					>
+						Email:
+					</label>
+					<input
+						id='email'
+						type='email'
+						value={email}
+						onChange={(e) => setEmail(e.target.value)}
+						style={{
+							width: '100%',
+							padding: '8px',
+							borderRadius: '4px',
+							border: '1px solid #ccc',
+						}}
+						required
+					/>
+				</div>
+
+				{/* Plans and Quantities */}
 				{plans.map((plan) => (
 					<div
 						key={plan.id}
@@ -274,6 +354,7 @@ const Reseller = () => {
 						</div>
 					</div>
 				))}
+				{/* Total Cost */}
 				<div
 					style={{
 						borderTop: '2px solid #ddd',
@@ -286,6 +367,7 @@ const Reseller = () => {
 						Total Cost: <span style={{ color: 'green' }}>₦{totalCost}</span>
 					</h3>
 				</div>
+				{/* Proceed to Payment Button */}
 				<div style={{ textAlign: 'center', marginTop: '20px' }}>
 					<button
 						onClick={handleProceedToPayment}

@@ -1,12 +1,12 @@
+require('dotenv').config(); // Load environment variables
 const crypto = require('crypto');
 
 const algorithm = 'aes-128-cbc'; // Use AES-128 with CBC mode
-const encryptionKey = Buffer.from('SapaTvLimited240', 'utf8'); // 16-byte key
+const encryptionKey = Buffer.from(process.env.ENCRYPTION_KEY, 'utf8'); // Retrieve key from .env
 const ivLength = 16; // AES-CBC requires a 16-byte IV
 
 function encrypt(plainText) {
-	const encryptionKey = Buffer.from('SapaTvLimited240', 'utf8');
-	const iv = Buffer.alloc(16, 0); // 16 bytes of zeros
+	const iv = Buffer.alloc(ivLength, 0); // 16 bytes of zeros
 	const cipher = crypto.createCipheriv(algorithm, encryptionKey, iv);
 	const encrypted = Buffer.concat([
 		cipher.update(plainText, 'utf8'),
@@ -16,8 +16,7 @@ function encrypt(plainText) {
 }
 
 function decrypt(cipherText) {
-	const encryptionKey = Buffer.from('SapaTvLimited240', 'utf8');
-	const iv = Buffer.alloc(16, 0); // Fixed all-zero IV, as used in C#
+	const iv = Buffer.alloc(ivLength, 0); // Fixed all-zero IV, as used in C#
 	const encryptedData = Buffer.from(cipherText, 'base64'); // Decode base64-encoded ciphertext
 
 	const decipher = crypto.createDecipheriv(algorithm, encryptionKey, iv);
@@ -35,8 +34,8 @@ try {
 
 	const encryptedText = encrypt(plaintext);
 	console.log('Encrypted:', encryptedText);
-	let l = 'Nju/Ua7aX9EOOlkl+7xDtJvFDqmKKjJdThr1G1Lc+ZM=';
-	const decryptedText = decrypt('j/L0h6Mh42efNaKh5Rhrukof6njvYSb51gxZUptPgBY=');
+
+	const decryptedText = decrypt(encryptedText);
 	console.log('Decrypted:', decryptedText);
 } catch (error) {
 	console.error('Error:', error.message);

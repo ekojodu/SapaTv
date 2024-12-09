@@ -13,6 +13,7 @@ import Footer from './assets/components/Footer/Footer';
 import Faq from './assets/components/Faq/Faq';
 import Reseller from './assets/components/Reseller/Reseller';
 import ResellerPayment from './assets/components/ResellerPayment/ResellerPayment';
+import ThankYou from './assets/components/ThankYou/ThankYou';
 
 const App = () => {
 	return (
@@ -75,6 +76,14 @@ const App = () => {
 								element={
 									<ErrorBoundary>
 										<ResellerPayment />
+									</ErrorBoundary>
+								}
+							/>
+							<Route
+								path='/thank-you'
+								element={
+									<ErrorBoundary>
+										<ThankYou />
 									</ErrorBoundary>
 								}
 							/>
