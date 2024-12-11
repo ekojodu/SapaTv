@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '/src/assets/images/sapaLogo.png';
 
@@ -6,6 +6,38 @@ const Navbar = () => {
 	const navigate = useNavigate();
 	const [menuOpen, setMenuOpen] = useState(false);
 
+	// Reset menu state when the window is resized (for large screen)
+	useEffect(() => {
+		const handleResize = () => {
+			// Check if the screen size is larger than 768px (or your breakpoint for large screens)
+			if (window.innerWidth > 768) {
+				setMenuOpen(false); // Close the menu on large screens
+			}
+		};
+
+		// Add event listener for window resize
+		window.addEventListener('resize', handleResize);
+
+		// Clean up the event listener on unmount
+		return () => {
+			window.removeEventListener('resize', handleResize);
+		};
+	}, []);
+
+	useEffect(() => {
+		const handleScroll = () => {
+			if (menuOpen) {
+				setMenuOpen(false);
+			}
+		};
+
+		window.addEventListener('scroll', handleScroll);
+
+		// Cleanup event listener on unmount
+		return () => {
+			window.removeEventListener('scroll', handleScroll);
+		};
+	}, [menuOpen]);
 	const handleScrollToSection = (sectionId) => {
 		// Close the menu when a link is clicked
 		setMenuOpen(false);
@@ -40,8 +72,11 @@ const Navbar = () => {
 				</div>
 
 				{/* Menu Icon for small screens */}
-				<div className='menu-icon' onClick={toggleMenu}>
-					{/* Simple hamburger icon */}
+				<div
+					className={`menu-icon ${menuOpen ? 'open' : ''}`}
+					onClick={toggleMenu}
+				>
+					{/* Simple hamburger icon that changes to X when menu is open */}
 					<div className='menu-bar'></div>
 					<div className='menu-bar'></div>
 					<div className='menu-bar'></div>

@@ -1,5 +1,8 @@
-import { useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useEffect, useState } from 'react';
+import useScript from '../../hooks/useScript';
+import axios from 'axios';
+
 const generateReference = () => {
 	const chars =
 		'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -10,30 +13,40 @@ const generateReference = () => {
 	return reference;
 };
 
-const loadFlutterwaveScript = () => {
-	return new Promise((resolve, reject) => {
-		const script = document.createElement('script');
-		script.src = 'https://checkout.flutterwave.com/v3.js';
-		script.onload = () => resolve(true);
-		script.onerror = () => reject(false);
-		document.body.appendChild(script);
-	});
-};
-
 const CompleteTransaction = () => {
 	const location = useLocation();
-	const { name, email, plan } = location.state || {};
-	const reference = generateReference();
+	const navigate = useNavigate(); // Initialize the navigate hook
+	const { isLoaded, hasError } = useScript(
+		'https://checkout.flutterwave.com/v3.js'
+	);
+	const [isProcessing, setIsProcessing] = useState(false); // State for tracking payment processing status
+	const [errorMessage, setErrorMessage] = useState(''); // State for error handling
+	const [isLoading, setIsLoading] = useState(true); // State to handle script loading state
+	const [reference] = useState(generateReference()); // Generate reference once and store it in state
 
 	useEffect(() => {
-		loadFlutterwaveScript()
-			.then(() => {
-				console.log('Flutterwave script loaded successfully');
-			})
-			.catch(() => {
-				console.error('Failed to load Flutterwave script');
-			});
-	}, []);
+		if (isLoaded) {
+			setIsLoading(false);
+			console.log('Flutterwave script has loaded');
+		} else if (hasError) {
+			setIsLoading(false);
+			setErrorMessage(
+				'Error loading Flutterwave script. Please try again later.'
+			);
+			console.log('Error loading Flutterwave script');
+		}
+	}, [isLoaded, hasError]);
+
+	const { name, email, plan } = location.state || {};
+	// const reference = generateReference();
+
+	const validatePlan = () => {
+		if (!plan || !plan.name || !plan.price) {
+			setErrorMessage('Invalid plan data. Please try again.');
+			return false;
+		}
+		return true;
+	};
 
 	const handlePayment = (e) => {
 		e.preventDefault();
@@ -43,8 +56,12 @@ const CompleteTransaction = () => {
 			return;
 		}
 
-		const amount = plan?.price || 0;
+		// Validate plan data
+		if (!validatePlan()) return;
 
+		const amount = plan.price || 0;
+
+		setIsProcessing(true); // Mark as processing
 		window.FlutterwaveCheckout({
 			public_key: 'FLWPUBK_TEST-6307e10c1faf0f32c15ab623ed6a67cc-X', // Replace with your test public key
 			tx_ref: reference,
@@ -64,20 +81,51 @@ const CompleteTransaction = () => {
 			callback: (data) => {
 				console.log('Payment successful:', data);
 				alert('Payment Successful!');
-				// Redirect or perform other actions after payment success
+
+				// Send type 'subscribe' to the backend when the payment is successful
+				const transactionData = {
+					tx_ref: reference,
+					customerEmail: email,
+					plans: [plan],
+					type: 'subscribe', // Add the type here
+					amount: amount,
+					customerName: name,
+				};
+
+				// Make the backend API call
+				handleBackendAPI(transactionData);
+
+				// Navigate to homepage after successful payment
+				navigate('/'); // Redirect to homepage
 			},
 			onclose: () => {
 				console.log('Payment closed');
-				alert('Payment was not completed.');
+				alert('Check your mailbox');
+				navigate('/'); // Navigate to the home page
 			},
 		});
+	};
+
+	// Separate function to handle backend API call
+	const handleBackendAPI = (transactionData) => {
+		axios
+			.post('http://localhost:3000/payment-confirmation', transactionData)
+			.then((response) => {
+				console.log('Transaction processed successfully:', response.data);
+				setIsProcessing(false); // Reset processing state
+			})
+			.catch((error) => {
+				console.error('Error processing transaction:', error);
+				setErrorMessage('Transaction failed. Please try again later.');
+				setIsProcessing(false); // Reset processing state
+			});
 	};
 
 	return (
 		<div className='transaction-details-container'>
 			<h1>Transaction Details</h1>
 
-			<form className='subscribe-form'>
+			<form className='subscribe-form' onSubmit={handlePayment}>
 				<h1>Get Started</h1>
 				<p>
 					Please feel free to reach out to us for any complaints{' '}
@@ -87,6 +135,9 @@ const CompleteTransaction = () => {
 					Please take note of this reference: <strong>{reference}</strong>. Use
 					this to contact us for any issues related to this transaction.
 				</p>
+
+				{isLoading && <p>Loading payment system...</p>}
+				{errorMessage && <p className='error-message'>{errorMessage}</p>}
 
 				<div className='transaction-details'>
 					<h3>
@@ -108,8 +159,12 @@ const CompleteTransaction = () => {
 						</p>
 					)}
 				</div>
-				<button onClick={handlePayment} type='button' className='button'>
-					Pay Now
+				<button
+					type='submit'
+					className='button'
+					disabled={isProcessing} // Disable the button during payment processing
+				>
+					{isProcessing ? 'Processing...' : 'Pay Now'}
 				</button>
 			</form>
 		</div>

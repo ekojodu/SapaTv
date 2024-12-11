@@ -75,9 +75,10 @@ nav {
 	.navbar-links {
 		display: none; /* Hide links by default */
 		flex-direction: column; /* Stack links vertically */
-		position: absolute;
-		top: 60px;
+		position: fixed;
+		top: 70px;
 		right: 0;
+		left: 0;
 		background-color: rgb(13, 197, 13); /* Match navbar color */
 		padding: 10px;
 		width: 100%; /* Full width for dropdown */
@@ -85,6 +86,25 @@ nav {
 
 	.navbar-links.show {
 		display: flex; /* Show links when menu is open */
+	}
+	/* Style for the open state (X icon) */
+	.menu-icon.open .menu-bar:nth-child(1) {
+		transform: rotate(45deg);
+		transform-origin: top left;
+	}
+
+	.menu-icon.open .menu-bar:nth-child(2) {
+		opacity: 0;
+	}
+
+	.menu-icon.open .menu-bar:nth-child(3) {
+		transform: rotate(-45deg);
+		transform-origin: bottom left;
+	}
+
+	/* Initially hide the navbar links on small screens */
+	.navbar-links {
+		display: none;
 	}
 }
 

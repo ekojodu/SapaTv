@@ -1,7 +1,4 @@
-
-
 const Footer = () => {
-
 	return (
 		<div className='footer-container'>
 			{/* Copyright Section */}
@@ -10,14 +7,12 @@ const Footer = () => {
 			</div>
 
 			{/* Links Section */}
-			<div className='footer-links'>
-				
-			</div>
+			<div className='footer-links'></div>
 
 			{/* Social Media Section */}
 			<div className='footer-social-media'>
 				<a
-					href='https://facebook.com'
+					href='https://web.facebook.com/profile.php?id=61559137037621&mibextid=JRoKGi&_rdc=1&_rdr#'
 					className='social-link'
 					target='_blank'
 					rel='noopener noreferrer'
@@ -25,15 +20,15 @@ const Footer = () => {
 					Facebook
 				</a>
 				<a
-					href='https://twitter.com'
+					href='https://api.whatsapp.com/send?phone=2348029161107&text=Hello!%0AI%20would%20like%20to%20know%20more%20about%20Sapa%20TV.%E2%9C%85'
 					className='social-link'
 					target='_blank'
 					rel='noopener noreferrer'
 				>
-					Twitter
+					Whatsapp
 				</a>
 				<a
-					href='https://instagram.com'
+					href='https://www.instagram.com/sapatv_app/?igsh=MXNyeTlkOW9jcGMwYw%3D%3D'
 					className='social-link'
 					target='_blank'
 					rel='noopener noreferrer'
