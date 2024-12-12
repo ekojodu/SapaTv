@@ -10,17 +10,17 @@ const ResellerProgram = () => {
 				fontFamily: 'Arial, sans-serif',
 			}}
 		>
-			<h1 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', color: '#333' }}>
+			<h1 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', color: '#fff' }}>
 				Reseller Program
 			</h1>
 			<p
 				style={{
 					fontSize: 'clamp(1rem, 3vw, 1.2rem)',
-					color: '#666',
+					color: '#fff',
 					marginBottom: '20px',
 				}}
 			>
-				Join our reseller program and boost your earnings today!{' '}
+				Join our reseller program and boost your earnings today! <br /> <br />
 				<Link
 					to='/reseller'
 					style={{
