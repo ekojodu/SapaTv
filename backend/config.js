@@ -196,6 +196,8 @@ app.post(
 			// Logic for reseller or subscription
 			if (type === 'reseller') {
 				const codesToSend = [];
+				const transactionsData = []; // Collect transaction entries here
+
 				for (let plan of plans) {
 					const planId = sanitize(plan.id);
 					const quantity = sanitize(plan.quantity);
@@ -208,12 +210,10 @@ app.post(
 					}
 
 					const query = `
-          SELECT TOP ${
-						quantity + Math.floor(quantity / 10)
-					} EncryptedSubscriptionCode 
-          FROM Codes 
-          WHERE isRedeemed = 0 AND PlanId = :planId;
-        `;
+					SELECT TOP ${quantity + Math.floor(quantity / 10)} EncryptedSubscriptionCode 
+					FROM Codes 
+					WHERE isRedeemed = 0 AND PlanId = :planId;
+					`;
 					const [codes] = await sequelize.query(query, {
 						replacements: { planId },
 					});
@@ -250,12 +250,25 @@ app.post(
 						codes: decryptedCodes,
 					});
 
+					// Add the transaction data for the current plan
+					transactionsData.push({
+						CustomerEmail: customerEmail,
+						Amount: planDetails.price * quantity, // Calculate total amount for the plan
+						TransactionType: 'Reseller Purchase',
+						Reference: tx_ref,
+						Status: 1, // Status 1 means completed
+						TransactionDate: new Date(),
+						PlanId: planId,
+						CustomerName: customerName,
+						FlutterwaveReference: flutterwave_reference,
+					});
+
 					// Mark the codes as redeemed
 					const updateQuery = `
-          UPDATE Codes 
-          SET isRedeemed = 1 
-          WHERE EncryptedSubscriptionCode IN (:codes);
-        `;
+					UPDATE Codes 
+					SET isRedeemed = 1 
+					WHERE EncryptedSubscriptionCode IN (:codes);
+					`;
 					await sequelize.query(updateQuery, {
 						replacements: {
 							codes: codes
@@ -283,18 +296,8 @@ app.post(
 				await transporter.sendMail(mailOptions);
 				console.log(`Email sent to ${customerEmail}`);
 
-				// Add to the transaction ledger
-				await Transactions.create({
-					CustomerEmail: customerEmail,
-					Amount: amount,
-					TransactionType: 'Payment',
-					Reference: tx_ref,
-					Status: 1, // Status 1 means completed
-					TransactionDate: new Date(),
-					PlanId: plans[0].id,
-					CustomerName: customerName,
-					FlutterwaveReference: flutterwave_reference,
-				});
+				// Add all transactions in one go
+				await Transactions.bulkCreate(transactionsData);
 
 				res.status(200).json({
 					message:
