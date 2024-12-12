@@ -230,8 +230,16 @@ app.post(
 					codesToSend.push(...decryptedCodes);
 
 					if (quantity >= 10) {
-						const freeCode = decrypt(codes[quantity].EncryptedSubscriptionCode);
-						codesToSend.push(freeCode);
+						// Calculate how many free codes should be added
+						const freeCodesCount = Math.floor(quantity / 10);
+
+						for (let i = 0; i < freeCodesCount; i++) {
+							// Decrypt and add the free code for every 10 units bought
+							const freeCode = decrypt(
+								codes[10 * (i + 1)].EncryptedSubscriptionCode
+							);
+							codesToSend.push(freeCode);
+						}
 					}
 
 					purchasedPlans.push({

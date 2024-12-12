@@ -1,11 +1,22 @@
+import React from 'react'; // Ensure you create and use this CSS file
+
 const Home = () => {
 	return (
 		<div className='home-content'>
-			<h1>Welcome to Our Website</h1>
-			<p>
-				This is a home section. here you can include an introduction or overview
-				of the website
-			</p>
+			<div className='background-container'>
+				<div className='home-images'>
+					<img
+						src='../src/assets/images/getwayMb.png'
+						alt='Image 1'
+						className='home-img'
+					/>
+					<img
+						src='../src/assets/images/get7Days.png'
+						alt='Image 2'
+						className='home-img'
+					/>
+				</div>
+			</div>
 		</div>
 	);
 };

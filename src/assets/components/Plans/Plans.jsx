@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import plan81 from '/src/assets/images/plan-81.png';
-import plan82 from '/src/assets/images/plan-82.png';
-import plan83 from '/src/assets/images/plan-83.png';
-import plan84 from '/src/assets/images/plan-84.png';
+import plan81 from '/src/assets/images/mobileWeekly.svg';
+import plan82 from '/src/assets/images/mobileMonthly.svg';
+import plan83 from '/src/assets/images/standardWeekly.svg';
+import plan84 from '/src/assets/images/standardMonthly.svg';
 
 const Plans = () => {
 	const [plans, setPlans] = useState([]);

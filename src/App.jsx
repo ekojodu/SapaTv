@@ -14,6 +14,7 @@ import Faq from './assets/components/Faq/Faq';
 import Reseller from './assets/components/Reseller/Reseller';
 import ResellerPayment from './assets/components/ResellerPayment/ResellerPayment';
 import ThankYou from './assets/components/ThankYou/ThankYou';
+import ResellerProgram from './assets/components/Reseller Program/Resellerprogram';
 
 const App = () => {
 	return (
@@ -38,6 +39,7 @@ const App = () => {
 										<Section id='download'>
 											<Download />
 										</Section>
+										<ResellerProgram />
 										<Section id='contact'>
 											<Contact />
 										</Section>

@@ -114,7 +114,66 @@ nav {
 	padding: 2rem;
 	/* border-bottom: 1px solid #ccc; */
 }
+.home-content {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start; /* Align content to the left */
+	height: 100vh;
+	width: 100%; /* Ensure the component takes full width */
+	/* padding: 20px; */
+	box-sizing: border-box; /* Ensure padding is accounted for in the width/height */
+}
 
+.background-container {
+	position: relative;
+	width: 100%;
+	height: 100%; /* Ensure the background image container takes full screen height */
+	background-image: url('../src/assets/images/sapaBanner.png'); /* Replace with your background image path */
+	background-size: cover; /* Ensure the background covers the whole area */
+	background-position: center;
+	background-repeat: no-repeat;
+	overflow: hidden; /* Prevent content from spilling over */
+}
+
+.home-images {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	width: 50%; /* Take up 50% of the container's width on larger screens */
+	position: absolute;
+	top: 50%;
+	left: 5%; /* Adjust to move the images towards the left */
+	transform: translateY(-50%); /* Center images vertically */
+}
+
+.home-img {
+	width: 100%;
+	border-radius: 10px; /* Optional for styling */
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Optional for styling */
+	object-fit: cover; /* Ensures images scale properly */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+	.home-content {
+		height: 50vh;
+	}
+
+	.background-container {
+		height: 50vh; /* Reduce the height of the background image on smaller screens */
+	}
+
+	.home-images {
+		
+		position: relative; /* Remove absolute positioning for better stacking */
+		transform: translateY(0); /* Remove the centering effect */
+		gap: 10px;
+	}
+
+	.home-img {
+		width: 100%; /* Ensure images scale to fit */
+	}
+}
 /* Existing 'tv' styles (unchanged) */
 .tv {
 	display: flex;
