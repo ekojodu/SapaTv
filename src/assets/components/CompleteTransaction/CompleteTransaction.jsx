@@ -23,17 +23,32 @@ const CompleteTransaction = () => {
 	const [errorMessage, setErrorMessage] = useState(''); // State for error handling
 	const [isLoading, setIsLoading] = useState(true); // State to handle script loading state
 	const [reference] = useState(generateReference()); // Generate reference once and store it in state
+	const [subaccountId, setSubaccountId] = useState(
+		'RS_F5BBF9CD9041035FDAC48B466C0215C2'
+	);
 
+	// Fetch CSRF token from backend
+	useEffect(() => {
+		// Fetch CSRF token on component mount
+		axios
+			.get('/csrf-token') // Make sure your backend has this endpoint
+			.then((response) => {
+				setCsrfToken(response.data.csrfToken); // Store the token in the state
+			})
+			.catch((error) => {
+				console.error('Error fetching CSRF token:', error);
+			});
+	}, []);
 	useEffect(() => {
 		if (isLoaded) {
 			setIsLoading(false);
-			console.log('Flutterwave script has loaded');
+			// console.log('Flutterwave script has loaded');
 		} else if (hasError) {
 			setIsLoading(false);
 			setErrorMessage(
 				'Error loading Flutterwave script. Please try again later.'
 			);
-			console.log('Error loading Flutterwave script');
+			// console.log('Error loading Flutterwave script');
 		}
 	}, [isLoaded, hasError]);
 
@@ -63,24 +78,26 @@ const CompleteTransaction = () => {
 
 		setIsProcessing(true); // Mark as processing
 		window.FlutterwaveCheckout({
-			public_key: 'FLWPUBK_TEST-6307e10c1faf0f32c15ab623ed6a67cc-X', // Replace with your test public key
+			public_key: 'FLWPUBK-25e44f726691b9937900e7db11692383-X', // Replace with your test public key
 			tx_ref: reference,
 			amount: amount,
 			currency: 'NGN',
 			payment_options: 'card, mobilemoney, ussd',
+			subaccount_id: subaccountId,
 			customer: {
-				email: email || 'noemail@example.com',
-				phonenumber: '', // Optional: Add phone number here
-				name: name || 'Unknown User',
+				email: email,
+				// Optional: Add phone number here
+				name: name,
 			},
 			customizations: {
 				title: 'Reseller Payment',
 				description: `Payment for ${plan?.name || 'selected plan'}`,
 				logo: 'https://your-logo-url.com/logo.png', // Optional: Add your logo URL
 			},
+
 			callback: (data) => {
-				console.log('Payment successful:', data);
-				alert('Payment Successful!');
+				// console.log('Payment successful:', data);
+				alert('Payment Successful!: ', data);
 
 				// Send type 'subscribe' to the backend when the payment is successful
 				const transactionData = {
@@ -90,6 +107,7 @@ const CompleteTransaction = () => {
 					type: 'subscribe', // Add the type here
 					amount: amount,
 					customerName: name,
+					subaccount_id: subaccountId,
 				};
 
 				// Make the backend API call
@@ -107,9 +125,20 @@ const CompleteTransaction = () => {
 	};
 
 	// Separate function to handle backend API call
+
 	const handleBackendAPI = (transactionData) => {
+		if (!csrfToken) {
+			// If CSRF token is not yet available, exit the function
+			// console.error('CSRF Token is missing!');
+			return;
+		}
+
 		axios
-			.post('http://localhost:3000/payment-confirmation', transactionData)
+			.post('http://localhost:3000/payment-confirmation', transactionData, {
+				headers: {
+					'CSRF-Token': csrfToken, // Add CSRF token to the header
+				},
+			})
 			.then((response) => {
 				console.log('Transaction processed successfully:', response.data);
 				setIsProcessing(false); // Reset processing state

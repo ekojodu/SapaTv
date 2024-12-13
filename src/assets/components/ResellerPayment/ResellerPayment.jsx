@@ -9,7 +9,6 @@ const ResellerPayment = () => {
 	const { isLoaded, hasError } = useScript(
 		'https://checkout.flutterwave.com/v3.js'
 	);
-	
 
 	// State to manage loading and details
 	const [hasLoaded, setHasLoaded] = useState(false);
@@ -23,6 +22,9 @@ const ResellerPayment = () => {
 	const [isProcessing, setIsProcessing] = useState(false); // To manage processing state
 	const [errorMessage, setErrorMessage] = useState('');
 	const [csrfToken, setCsrfToken] = useState(''); // State to store CSRF token
+	const [subaccountId, setSubaccountId] = useState(
+		'RS_F5BBF9CD9041035FDAC48B466C0215C2'
+	);
 
 	// Fetch CSRF token from backend
 	useEffect(() => {
@@ -36,7 +38,18 @@ const ResellerPayment = () => {
 				console.error('Error fetching CSRF token:', error);
 			});
 	}, []);
-
+	useEffect(() => {
+		if (isLoaded) {
+			setIsLoading(false);
+			// console.log('Flutterwave script has loaded');
+		} else if (hasError) {
+			setIsLoading(false);
+			setErrorMessage(
+				'Error loading Flutterwave script. Please try again later.'
+			);
+			// console.log('Error loading Flutterwave script');
+		}
+	}, [isLoaded, hasError]);
 	// Use the location.state data to update the details
 	useEffect(() => {
 		if (location.state) {
@@ -116,11 +129,12 @@ const ResellerPayment = () => {
 
 		// Payment integration with Flutterwave
 		FlutterwaveCheckout({
-			public_key: 'FLWPUBK_TEST-6307e10c1faf0f32c15ab623ed6a67cc-X', // Replace with your Flutterwave public key
+			public_key: 'FLWPUBK-25e44f726691b9937900e7db11692383-X', // Replace with your Flutterwave public key
 			tx_ref: referenceNumber,
 			amount: details.totalCost,
 			currency: 'NGN',
 			payment_options: 'card, mobilemoney, ussd',
+			subaccount_id: subaccountId,
 			customer: {
 				email: details.email,
 				phonenumber: '', // Optional
@@ -132,12 +146,13 @@ const ResellerPayment = () => {
 				logo: 'https://your-logo-url.com/logo.png', // Optional: Add your logo URL
 			},
 			callback: (data) => {
-				console.log('Payment successful:', data);
+				// console.log('Payment successful:', data);
 				const transactionData = {
 					...payload, // Spread the existing payload properties
 					status: data.status, // Use the status from the Flutterwave response
+					subaccount_id: subaccountId,
 				};
-				alert('Payment Successful!');
+				// alert('Payment Successful!');
 				handleBackendAPI(transactionData); // Send data to backend
 			},
 			onclose: () => {

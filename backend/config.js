@@ -19,6 +19,10 @@ const app = express();
 
 // Middleware for enhanced security
 app.use(helmet()); // Use Helmet for security headers
+app.get('/csrf-token', (req, res) => {
+	res.json({ csrfToken: req.csrfToken() }); // Send the CSRF token to the frontend
+});
+
 app.use(
 	csurf({ cookie: { httpOnly: true, secure: true, sameSite: 'Strict' } })
 ); // CSRF protection
@@ -131,6 +135,33 @@ const Transactions = sequelize.define(
 	}
 );
 
+const Plans = sequelize.define(
+	'Plans',
+	{
+		PlanId: {
+			type: DataTypes.INTEGER,
+			primaryKey: true,
+			autoIncrement: true,
+		},
+		name: {
+			type: DataTypes.STRING,
+			allowNull: false,
+		},
+		description: {
+			type: DataTypes.STRING,
+			allowNull: true,
+		},
+		price: {
+			type: DataTypes.DECIMAL,
+			allowNull: false,
+		},
+	},
+	{
+		timestamps: false, // Only if you don’t use `createdAt` or `updatedAt`
+		tableName: 'Plans', // Ensure it matches your DB table name
+	}
+);
+
 // Test the connection
 sequelize
 	.authenticate()
@@ -147,6 +178,19 @@ const paymentConfirmationLimiter = rateLimit({
 	standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
 	legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
+
+const transactions = {};
+
+app.post('/initiate-payment', (req, res) => {
+	const { tx_ref, subaccount_id, customer, plan } = req.body;
+
+	// Store the subaccount_id for this tx_ref
+	transactions[tx_ref] = { subaccount_id, customer, plan };
+
+	// Proceed with payment initiation (send to Flutterwave, etc.)
+	res.send({ message: 'Payment initiated successfully.' });
+});
+
 // Endpoint to handle payment confirmation
 app.post(
 	'/payment-confirmation',
@@ -187,30 +231,172 @@ app.post(
 				);
 				return response.data;
 			};
-			let emailContent = `Thank you for your purchase. Below are the details of your subscription:\n\n`;
-			let purchasedPlans = [];
 
-			// Logic for reseller or subscription
-			if (type === 'reseller') {
-				const codesToSend = [];
-				const transactionsData = []; // Collect transaction entries here
+			// Verify the transaction
+			const verificationResponse = await verifyTransaction(tx_ref);
 
-				for (let plan of plans) {
-					const planId = sanitize(plan.id);
-					const quantity = sanitize(plan.quantity);
+			if (verificationResponse.status !== 'success') {
+				return res
+					.status(400)
+					.json({ error: 'Transaction verification failed' });
+			}
+
+			// Get the transaction data from memory (or your database)
+			const transactionData = transactions[tx_ref];
+			if (!transactionData) {
+				return res
+					.status(400)
+					.json({ error: 'Transaction not found in records' });
+			}
+
+			// Extract the expected subaccount_id
+			const expectedSubaccountId = transactionData.subaccount_id;
+
+			// Check if the transaction is successful and the subaccount_id matches
+			const transactionDetails = verificationResponse.data;
+			if (transactionDetails.status === 'successful') {
+				// Compare the expected subaccount_id with the one from the transaction
+				if (transactionDetails.subaccount_id !== expectedSubaccountId) {
+					return res
+						.status(400)
+						.json({ error: 'Subaccount mismatch in transaction details' });
+				}
+
+				let emailContent = `Thank you for your purchase. Below are the details of your subscription:\n\n`;
+				let purchasedPlans = [];
+
+				// Logic for reseller or subscription
+				if (type === 'reseller') {
+					const codesToSend = [];
+					const transactionsData = []; // Collect transaction entries here
+
+					for (let plan of plans) {
+						const planId = sanitize(plan.id);
+						const quantity = sanitize(plan.quantity);
+
+						// Fetch the plan details from the database
+						const planDetails = await Plans.findOne({
+							where: { PlanId: planId },
+						});
+
+						if (!planDetails) {
+							return res
+								.status(404)
+								.json({ error: `Plan ${planId} not found` });
+						}
+
+						const query = `
+			  SELECT TOP ${quantity + Math.floor(quantity / 10)} EncryptedSubscriptionCode
+			  FROM Codes
+			  WHERE isRedeemed = 0 AND PlanId = :planId;
+			  `;
+						const [codes] = await sequelize.query(query, {
+							replacements: { planId },
+						});
+
+						if (!codes || codes.length === 0) {
+							return res
+								.status(404)
+								.json({ error: `No available codes for plan ${planId}` });
+						}
+
+						let decryptedCodes = codes
+							.slice(0, quantity)
+							.map((code) => decrypt(code.EncryptedSubscriptionCode));
+						codesToSend.push(...decryptedCodes);
+
+						if (quantity >= 10) {
+							// Calculate how many free codes should be added
+							const freeCodesCount = Math.floor(quantity / 10);
+
+							for (let i = 0; i < freeCodesCount; i++) {
+								// Decrypt and add the free code for every 10 units bought
+								const freeCode = decrypt(
+									codes[10 * (i + 1)].EncryptedSubscriptionCode
+								);
+								codesToSend.push(freeCode);
+							}
+						}
+
+						purchasedPlans.push({
+							planId,
+							planName: planDetails.name,
+							planDescription: planDetails.description,
+							planPrice: planDetails.price,
+							codes: decryptedCodes,
+						});
+
+						// Add the transaction data for the current plan
+						transactionsData.push({
+							CustomerEmail: customerEmail,
+							Amount: planDetails.price * quantity, // Calculate total amount for the plan
+							TransactionType: 'Reseller Purchase',
+							Reference: tx_ref,
+							Status: 1, // Status 1 means completed
+							TransactionDate: new Date(),
+							PlanId: planId,
+							CustomerName: customerName,
+							FlutterwaveReference: flutterwave_reference,
+						});
+
+						// Mark the codes as redeemed
+						const updateQuery = `
+			  UPDATE Codes
+			  SET isRedeemed = 1
+			  WHERE EncryptedSubscriptionCode IN (:codes);
+			  `;
+						await sequelize.query(updateQuery, {
+							replacements: {
+								codes: codes
+									.slice(0, quantity)
+									.map((code) => code.EncryptedSubscriptionCode),
+							},
+						});
+					}
+
+					purchasedPlans.forEach((plan) => {
+						emailContent += `\n${plan.planName} - ${plan.planDescription} (${plan.planPrice}):\n`;
+						plan.codes.forEach((code) => {
+							emailContent += `Code: ${code}\n`;
+						});
+					});
+
+					// Send email for reseller purchase
+					const mailOptions = {
+						from: process.env.SMTP_USER,
+						to: customerEmail,
+						subject: 'Your Subscription Codes',
+						text: emailContent,
+					};
+
+					await transporter.sendMail(mailOptions);
+
+					// Add all transactions in one go
+					await Transactions.bulkCreate(transactionsData);
+
+					res.status(200).json({
+						message:
+							'Payment confirmed, codes sent to customer, and transaction recorded',
+						tx_ref,
+					});
+				} else if (type === 'subscribe') {
+					// Handle regular subscription
+					const planId = sanitize(plans[0].id);
 
 					// Fetch the plan details from the database
-					const planDetails = await Plan.findOne({ where: { PlanId: planId } });
+					const planDetails = await Plans.findOne({
+						where: { PlanId: planId },
+					});
 
 					if (!planDetails) {
 						return res.status(404).json({ error: `Plan ${planId} not found` });
 					}
 
 					const query = `
-					SELECT TOP ${quantity + Math.floor(quantity / 10)} EncryptedSubscriptionCode 
-					FROM Codes 
-					WHERE isRedeemed = 0 AND PlanId = :planId;
-					`;
+			  SELECT TOP 1 EncryptedSubscriptionCode
+			  FROM Codes
+			  WHERE isRedeemed = 0 AND PlanId = :planId;
+			`;
 					const [codes] = await sequelize.query(query, {
 						replacements: { planId },
 					});
@@ -218,40 +404,37 @@ app.post(
 					if (!codes || codes.length === 0) {
 						return res
 							.status(404)
-							.json({ error: `No available codes for plan ${planId}` });
+							.json({ error: 'No available codes to redeem' });
 					}
 
-					let decryptedCodes = codes
-						.slice(0, quantity)
-						.map((code) => decrypt(code.EncryptedSubscriptionCode));
-					codesToSend.push(...decryptedCodes);
+					const decryptedCode = decrypt(codes[0].EncryptedSubscriptionCode);
 
-					if (quantity >= 10) {
-						// Calculate how many free codes should be added
-						const freeCodesCount = Math.floor(quantity / 10);
-
-						for (let i = 0; i < freeCodesCount; i++) {
-							// Decrypt and add the free code for every 10 units bought
-							const freeCode = decrypt(
-								codes[10 * (i + 1)].EncryptedSubscriptionCode
-							);
-							codesToSend.push(freeCode);
-						}
-					}
-
-					purchasedPlans.push({
-						planId,
-						planName: planDetails.name,
-						planDescription: planDetails.description,
-						planPrice: planDetails.price,
-						codes: decryptedCodes,
+					const updateQuery = `
+			  UPDATE Codes
+			  SET isRedeemed = 1
+			  WHERE EncryptedSubscriptionCode = :encryptedCode;
+			`;
+					await sequelize.query(updateQuery, {
+						replacements: { encryptedCode: codes[0].EncryptedSubscriptionCode },
 					});
 
-					// Add the transaction data for the current plan
-					transactionsData.push({
-						CustomerEmail: customerEmail,
-						Amount: planDetails.price * quantity, // Calculate total amount for the plan
-						TransactionType: 'Reseller Purchase',
+					emailContent += `${planDetails.name} - ${planDetails.description} (${planDetails.price}): ${decryptedCode}`;
+
+					// Send email for subscription
+					const mailOptions = {
+						from: process.env.SMTP_USER,
+						to: customerEmail,
+						subject: 'Your Subscription Code',
+						text: emailContent,
+					};
+
+					await transporter.sendMail(mailOptions);
+
+					// Add to the transaction ledger
+					await Transactions.create({
+						customerEmail,
+						Amount: amount,
+						TransactionType: 'Payment',
 						Reference: tx_ref,
 						Status: 1, // Status 1 means completed
 						TransactionDate: new Date(),
@@ -260,117 +443,16 @@ app.post(
 						FlutterwaveReference: flutterwave_reference,
 					});
 
-					// Mark the codes as redeemed
-					const updateQuery = `
-					UPDATE Codes 
-					SET isRedeemed = 1 
-					WHERE EncryptedSubscriptionCode IN (:codes);
-					`;
-					await sequelize.query(updateQuery, {
-						replacements: {
-							codes: codes
-								.slice(0, quantity)
-								.map((code) => code.EncryptedSubscriptionCode),
-						},
+					res.status(200).json({
+						message:
+							'Payment confirmed, code sent to customer, and transaction recorded',
+						tx_ref,
 					});
+				} else {
+					res.status(400).json({ error: 'Invalid payment type' });
 				}
-
-				purchasedPlans.forEach((plan) => {
-					emailContent += `\n${plan.planName} - ${plan.planDescription} (${plan.planPrice}):\n`;
-					plan.codes.forEach((code) => {
-						emailContent += `Code: ${code}\n`;
-					});
-				});
-
-				// Send email for reseller purchase
-				const mailOptions = {
-					from: process.env.SMTP_USER,
-					to: customerEmail,
-					subject: 'Your Subscription Codes',
-					text: emailContent,
-				};
-
-				await transporter.sendMail(mailOptions);
-				// console.log(`Email sent to ${customerEmail}`);
-
-				// Add all transactions in one go
-				await Transactions.bulkCreate(transactionsData);
-
-				res.status(200).json({
-					message:
-						'Payment confirmed, codes sent to customer, and transaction recorded',
-					tx_ref,
-				});
-			} else if (type === 'subscribe') {
-				// Handle regular subscription
-				const planId = sanitize(plans[0].id);
-
-				// Fetch the plan details from the database
-				const planDetails = await Plan.findOne({ where: { PlanId: planId } });
-
-				if (!planDetails) {
-					return res.status(404).json({ error: `Plan ${planId} not found` });
-				}
-
-				const query = `
-        SELECT TOP 1 EncryptedSubscriptionCode 
-        FROM Codes 
-        WHERE isRedeemed = 0 AND PlanId = :planId;
-      `;
-				const [codes] = await sequelize.query(query, {
-					replacements: { planId },
-				});
-
-				if (!codes || codes.length === 0) {
-					return res
-						.status(404)
-						.json({ error: 'No available codes to redeem' });
-				}
-
-				const decryptedCode = decrypt(codes[0].EncryptedSubscriptionCode);
-
-				const updateQuery = `
-        UPDATE Codes 
-        SET isRedeemed = 1 
-        WHERE EncryptedSubscriptionCode = :encryptedCode;
-      `;
-				await sequelize.query(updateQuery, {
-					replacements: { encryptedCode: codes[0].EncryptedSubscriptionCode },
-				});
-
-				emailContent += `${planDetails.name} - ${planDetails.description} (${planDetails.price}): ${decryptedCode}`;
-
-				// Send email for subscription
-				const mailOptions = {
-					from: process.env.SMTP_USER,
-					to: customerEmail,
-					subject: 'Your Subscription Code',
-					text: emailContent,
-				};
-
-				await transporter.sendMail(mailOptions);
-				// console.log(`Email sent to ${customerEmail}`);
-
-				// Add to the transaction ledger
-				await Transactions.create({
-					customerEmail,
-					Amount: amount,
-					TransactionType: 'Payment',
-					Reference: tx_ref,
-					Status: 1, // Status 1 means completed
-					TransactionDate: new Date(),
-					PlanId: planId,
-					CustomerName: customerName,
-					FlutterwaveReference: flutterwave_reference,
-				});
-
-				res.status(200).json({
-					message:
-						'Payment confirmed, code sent to customer, and transaction recorded',
-					tx_ref,
-				});
 			} else {
-				res.status(400).json({ error: 'Invalid payment type' });
+				res.status(400).json({ error: 'Transaction verification failed' });
 			}
 		} catch (error) {
 			console.error('Error processing payment confirmation:', error);
