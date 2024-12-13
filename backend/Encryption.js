@@ -27,20 +27,6 @@ function decrypt(cipherText) {
 	return decrypted.toString('utf8');
 }
 
-// Example
-try {
-	const plaintext = 'Hello, Sapa TV!';
-	console.log('Original:', plaintext);
-
-	const encryptedText = encrypt(plaintext);
-	console.log('Encrypted:', encryptedText);
-
-	const decryptedText = decrypt(encryptedText);
-	console.log('Decrypted:', decryptedText);
-} catch (error) {
-	console.error('Error:', error.message);
-}
-
 module.exports = {
 	encrypt,
 	decrypt,

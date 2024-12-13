@@ -178,18 +178,15 @@ app.post(
 				return res.status(400).json({ error: 'Invalid request data' });
 			}
 
-			// Verify the payment signature from Flutterwave for additional security
-			const secretKey = process.env.FLUTTERWAVE_SECRET_KEY;
-			const generatedSignature = crypto
-				.createHmac('sha256', secretKey)
-				.update(tx_ref + status + amount) // Adjust this based on Flutterwave's format
-				.digest('hex');
+			const verifyTransaction = async (tx_ref) => {
+				const flutterwaveKey = process.env.FLUTTERWAVE_SECRET_KEY;
 
-			// Compare the generated signature with Flutterwave's sent signature (for security)
-			if (generatedSignature !== req.headers['x-flutterwave-signature']) {
-				return res.status(403).json({ error: 'Invalid signature' });
-			}
-
+				const response = await axios.get(
+					`https://api.flutterwave.com/v3/transactions/verify_by_reference?tx_ref=${tx_ref}`,
+					{ headers: { Authorization: `Bearer ${flutterwaveKey}` } }
+				);
+				return response.data;
+			};
 			let emailContent = `Thank you for your purchase. Below are the details of your subscription:\n\n`;
 			let purchasedPlans = [];
 
@@ -294,7 +291,7 @@ app.post(
 				};
 
 				await transporter.sendMail(mailOptions);
-				console.log(`Email sent to ${customerEmail}`);
+				// console.log(`Email sent to ${customerEmail}`);
 
 				// Add all transactions in one go
 				await Transactions.bulkCreate(transactionsData);
@@ -352,7 +349,7 @@ app.post(
 				};
 
 				await transporter.sendMail(mailOptions);
-				console.log(`Email sent to ${customerEmail}`);
+				// console.log(`Email sent to ${customerEmail}`);
 
 				// Add to the transaction ledger
 				await Transactions.create({

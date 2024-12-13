@@ -1,3 +1,5 @@
+import { FaFacebook, FaWhatsapp, FaInstagram } from 'react-icons/fa'; // Font Awesome Icons
+
 const Footer = () => {
 	return (
 		<div className='footer-container'>
@@ -17,7 +19,7 @@ const Footer = () => {
 					target='_blank'
 					rel='noopener noreferrer'
 				>
-					Facebook
+					<FaFacebook style={{ color: '#4267B2', fontSize: '2em' }} />
 				</a>
 				<a
 					href='https://api.whatsapp.com/send?phone=2348029161107&text=Hello!%0AI%20would%20like%20to%20know%20more%20about%20Sapa%20TV.%E2%9C%85'
@@ -25,7 +27,7 @@ const Footer = () => {
 					target='_blank'
 					rel='noopener noreferrer'
 				>
-					Whatsapp
+					<FaWhatsapp style={{ color: '#25D366', fontSize: '2em' }} />
 				</a>
 				<a
 					href='https://www.instagram.com/sapatv_app/?igsh=MXNyeTlkOW9jcGMwYw%3D%3D'
@@ -33,7 +35,7 @@ const Footer = () => {
 					target='_blank'
 					rel='noopener noreferrer'
 				>
-					Instagram
+					<FaInstagram style={{ color: '#E1306C', fontSize: '2em' }} />
 				</a>
 			</div>
 		</div>
