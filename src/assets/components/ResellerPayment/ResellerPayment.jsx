@@ -38,18 +38,20 @@ const ResellerPayment = () => {
 				console.error('Error fetching CSRF token:', error);
 			});
 	}, []);
+
+	// Handle loading state for Flutterwave script
 	useEffect(() => {
 		if (isLoaded) {
-			setIsLoading(false);
-			// console.log('Flutterwave script has loaded');
+			// Script has loaded successfully
+			console.log('Flutterwave script loaded');
 		} else if (hasError) {
-			setIsLoading(false);
+			// Error loading the script
 			setErrorMessage(
 				'Error loading Flutterwave script. Please try again later.'
 			);
-			// console.log('Error loading Flutterwave script');
 		}
 	}, [isLoaded, hasError]);
+
 	// Use the location.state data to update the details
 	useEffect(() => {
 		if (location.state) {
@@ -119,7 +121,7 @@ const ResellerPayment = () => {
 			tx_ref: referenceNumber,
 			customerEmail: details.email,
 			customerName: details.name,
-			plans: details.plans.map((plan) => ({
+			Plans: details.plans.map((plan) => ({
 				id: plan.id,
 				quantity: details.quantities[plan.id] || 0,
 			})),
