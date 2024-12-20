@@ -12,7 +12,7 @@ const axios = require('axios'); // CSRF protection
 const sanitize = require('sanitize')(); // Input sanitization
 const rateLimit = require('express-rate-limit');
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
 const app = express();
 
 // Middleware for enhanced security
@@ -375,7 +375,7 @@ app.post('/api/initiate-payment', async (req, res) => {
 				tx_ref: reference,
 				amount: plan.price,
 				currency: 'NGN',
-				redirect_url: `${apiUrl}/confirm-payment`,
+				redirect_url: 'https://sapatv.onrender.com/api/confirm-payment',
 				customer: { name, email },
 			};
 		} else if (type === 'reseller') {
@@ -404,7 +404,7 @@ app.post('/api/initiate-payment', async (req, res) => {
 				tx_ref: reference,
 				amount: resellerAmount,
 				currency: 'NGN',
-				redirect_url: `${apiUrl}/confirm-payment`,
+				redirect_url: 'https://sapatv.onrender.com/api/confirm-payment',
 				customer: { name, email },
 			};
 		}
