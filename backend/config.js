@@ -448,176 +448,135 @@ app.post('/api/initiate-payment', async (req, res) => {
 			.json({ error: 'Internal server error', details: error.message });
 	}
 });
-app.get(
-	'/api/confirm-payment',
-	paymentConfirmationLimiter,
-	async (req, res) => {
-		const { tx_ref, transaction_id } = req.query;
-
-		try {
-			// Verify the transaction with Flutterwave
-			const verificationResponse = await fetch(
-				`https://api.flutterwave.com/v3/transactions/${transaction_id}/verify`,
-				{
-					method: 'GET',
-					headers: {
-						Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}`,
-						'Content-Type': 'application/json',
-					},
-				}
-			);
-
-			const verificationData = await verificationResponse.json();
-
-			if (
-				verificationResponse.status !== 200 ||
-				verificationData.status !== 'success'
-			) {
-				console.error('Failed to verify transaction:', verificationData);
-				return res.status(500).json({
-					error: 'Failed to verify transaction',
-					details: verificationData,
-				});
-			}
-
-			const { flw_ref, status, meta, id, customer } = verificationData.data;
-			const paymentUrl = meta?.__CheckoutInitAddress;
-
-			// Log transaction verification success
-			console.log('Transaction verified successfully:', verificationData);
-
-			// Check if transaction exists
-			const transaction = await Transactions.findOne({
-				where: { Reference: tx_ref },
-			});
-			if (!transaction) {
-				console.error('Transaction not found for reference:', tx_ref);
-				return res.status(404).json({ error: 'Transaction not found' });
-			}
-
-			// Update the transaction status and references
-			const updateResult = await Transactions.update(
-				{
-					TrxId: id,
-					TransactionStatus: status === 'successful' ? 1 : 0,
-					FlutterReference: flw_ref,
-					PaymentUrl: paymentUrl,
+app.get('/api/confirm-payment', async (req, res) => {
+	try {
+		const { status, tx_ref, transaction_id } = req.query;
+		if (status !== 'successful') {
+			console.error('Payment not successful:', status);
+			return res.status(400).json({ error: 'Payment not successful' });
+		}
+		const verificationResponse = await fetch(
+			`https://api.flutterwave.com/v3/transactions/${transaction_id}/verify`,
+			{
+				method: 'GET',
+				headers: {
+					Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}`,
+					'Content-Type': 'application/json',
 				},
-				{ where: { Reference: tx_ref } }
-			);
-
-			// Log transaction update result
-			console.log('Transaction updated successfully:', updateResult);
-
-			if (status !== 'successful') {
-				console.error('Transaction verification failed:', status);
-				return res
-					.status(400)
-					.json({ error: 'Transaction verification failed' });
 			}
-
-			const customerEmail = customer.email;
-			const customerName = customer.name;
-
-			const plan =
-				transaction.TransactionType === 'subscribe'
-					? {
-							type: 'subscribe',
-							plans: [{ id: transaction.PlanId }],
-					  }
-					: {
-							type: 'reseller',
-							plans: await (async () => {
-								const transactions = await Transactions.findAll({
-									where: { Reference: tx_ref },
-									attributes: [
-										'PlanId',
-										[sequelize.literal('Amount/Quantity'), 'quantity'],
-									],
-									group: ['PlanId'],
-								});
-
-								// Ensure transactions is an array
-								if (!Array.isArray(transactions)) {
-									console.error('Transactions is not an array:', transactions);
-									return [];
-								}
-
-								return transactions.map((trx) => ({
-									id: trx.PlanId,
-									quantity: trx.getDataValue('quantity'),
-								}));
-							})(),
-					  };
-
-			if (plan.type === 'reseller') {
-				let emailContent = `Thank you for your purchase. Below are the details of your subscription:\n\n`;
-				for (const planItem of plan.plans) {
-					const planDetails = await fetchPlanDetails(planItem.id);
-					if (!planDetails) {
-						console.error('Plan not found:', planItem.id);
-						return res
-							.status(404)
-							.json({ error: `Plan ${planItem.id} not found` });
-					}
-					const decryptedCodes = await fetchAndUpdateCodes(
-						planItem.id,
-						planItem.quantity
-					);
-					emailContent += `${customerName} - ${planDetails.PlanName} (${planDetails.Amount}):\n`;
-					decryptedCodes.forEach((code) => {
-						emailContent += `Code: ${code}\n`;
-					});
-				}
-				await sendEmail(customerEmail, 'Your Subscription Codes', emailContent);
-			} else if (plan.type === 'subscribe') {
-				const planDetails = await fetchPlanDetails(plan.plans[0].id);
-				if (!planDetails) {
-					console.error('Plan not found:', plan.plans[0].id);
-					return res
-						.status(404)
-						.json({ error: `Plan ${plan.plans[0].id} not found` });
-				}
-				const decryptedCode = (
-					await fetchAndUpdateCodes(plan.plans[0].id, 1)
-				)[0];
-				const emailContent = `Thank you for your subscription. Below are your subscription details:\n\n${customerName} - ${planDetails.PlanName} (${planDetails.Amount}): ${decryptedCode}`;
-				await sendEmail(customerEmail, 'Your Subscription Code', emailContent);
-			} else {
-				return res.status(400).json({ error: 'Invalid payment type' });
-			}
-
-			// Prepare the compact data object
-			const transactionData = {
-				reference: tx_ref,
-				status,
-				amount: transaction.Amount,
-				customerName: customer.name,
-				transactionId: id,
-				customerCreatedAt: customer.created_at,
-			};
-
-			// Encode the data in Base64
-			const encodedData = Buffer.from(JSON.stringify(transactionData)).toString(
-				'base64'
-			);
-			// Define the base URL for the frontend
-			const baseUrl = 'https://sapatv.vercel.app/payment-summary';
-			// Construct the short URL
-			const shortUrl = `${baseUrl}?data=${encodeURIComponent(encodedData)}`;
-			// Log the short URL before redirecting
-			console.log('Redirecting to:', shortUrl);
-			// Redirect to the frontend with the short URL
-			return res.redirect(shortUrl);
-		} catch (error) {
-			console.error('Internal server error:', error.message, error.stack);
+		);
+		const verificationData = await verificationResponse.json();
+		if (
+			verificationResponse.status !== 200 ||
+			verificationData.status !== 'success'
+		) {
+			console.error('Failed to verify transaction:', verificationData);
 			return res.status(500).json({
-				error: 'Internal server error',
-				details: error.message,
+				error: 'Failed to verify transaction',
+				details: verificationData,
 			});
 		}
+		const { flw_ref, meta, id, customer } = verificationData.data;
+		const paymentUrl = meta?.__CheckoutInitAddress;
+		console.log('Verification Data:', verificationData);
+		const transaction = await Transactions.findOne({
+			where: { Reference: tx_ref },
+		});
+		if (!transaction) {
+			console.error('Transaction not found for reference:', tx_ref);
+			return res.status(404).json({ error: 'Transaction not found' });
+		}
+		const updateResult = await Transactions.update(
+			{
+				TrxId: id,
+				TransactionStatus: status === 'successful' ? 1 : 0,
+				FlutterReference: flw_ref,
+				PaymentUrl: paymentUrl,
+			},
+			{ where: { Reference: tx_ref } }
+		);
+		console.log('Transaction Update Result:', updateResult);
+		const customerEmail = customer.email;
+		const customerName = customer.name;
+		const plan =
+			transaction.TransactionType === 'subscribe'
+				? { type: 'subscribe', plans: [{ id: transaction.PlanId }] }
+				: {
+						type: 'reseller',
+						plans: await (async () => {
+							const transactions = await Transactions.findAll({
+								where: { Reference: tx_ref },
+								attributes: [
+									'PlanId',
+									[sequelize.literal('Amount/Quantity'), 'quantity'],
+								],
+								group: ['PlanId'],
+							});
+							return transactions.map((trx) => ({
+								id: trx.PlanId,
+								quantity: trx.getDataValue('quantity'),
+							}));
+						})(),
+				  };
+		console.log('Plan Data:', plan);
+		if (plan.type === 'reseller') {
+			let emailContent = `Thank you for your purchase. Below are the details of your subscription:\n\n`;
+			for (const planItem of plan.plans) {
+				const planDetails = await fetchPlanDetails(planItem.id);
+				if (!planDetails) {
+					console.error('Plan not found:', planItem.id);
+					return res
+						.status(404)
+						.json({ error: `Plan ${planItem.id} not found` });
+				}
+				console.log('Plan Details:', planDetails);
+				const decryptedCodes = await fetchAndUpdateCodes(
+					planItem.id,
+					planItem.quantity
+				);
+				console.log('Decrypted Codes:', decryptedCodes);
+				emailContent += `${customerName} - ${planDetails.PlanName} (${planDetails.Amount}):\n`;
+				decryptedCodes.forEach((code) => {
+					emailContent += `Code: ${code}\n`;
+				});
+			}
+			await sendEmail(customerEmail, 'Your Subscription Codes', emailContent);
+		} else if (plan.type === 'subscribe') {
+			const planDetails = await fetchPlanDetails(plan.plans[0].id);
+			if (!planDetails) {
+				console.error('Plan not found:', plan.plans[0].id);
+				return res
+					.status(404)
+					.json({ error: `Plan ${plan.plans[0].id} not found` });
+			}
+			const decryptedCode = (await fetchAndUpdateCodes(plan.plans[0].id, 1))[0];
+			const emailContent = `Thank you for your subscription. Below are your subscription details:\n\n${customerName} - ${planDetails.PlanName} (${planDetails.Amount}): ${decryptedCode}`;
+			await sendEmail(customerEmail, 'Your Subscription Code', emailContent);
+		} else {
+			return res.status(400).json({ error: 'Invalid payment type' });
+		}
+		const transactionData = {
+			reference: tx_ref,
+			status,
+			amount: transaction.Amount,
+			customerName: customer.name,
+			transactionId: id,
+			customerCreatedAt: customer.created_at,
+		};
+		const encodedData = Buffer.from(JSON.stringify(transactionData)).toString(
+			'base64'
+		);
+		const baseUrl = 'https://sapatv.vercel.app/payment-summary';
+		const shortUrl = `${baseUrl}?data=${encodeURIComponent(encodedData)}`;
+		console.log('Redirecting to:', shortUrl);
+		return res.redirect(shortUrl);
+	} catch (error) {
+		console.error('Internal server error:', error.message, error.stack);
+		return res
+			.status(500)
+			.json({ error: 'Internal server error', details: error.message });
 	}
-);
+});
 
 // Start the server
 app.listen(PORT, () => {
