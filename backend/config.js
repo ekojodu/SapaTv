@@ -589,7 +589,7 @@ app.get(
 			);
 
 			// Define the base URL for the frontend
-			const baseUrl = 'https://sapatv.vercel.app/api/payment-summary';
+			const baseUrl = 'https://sapatv.vercel.app/payment-summary';
 
 			// Construct the short URL
 			const shortUrl = `${baseUrl}?data=${encodeURIComponent(encodedData)}`;
