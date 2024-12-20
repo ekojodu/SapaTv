@@ -11,10 +11,7 @@ const helmet = require('helmet'); // Helmet for enhanced security
 const axios = require('axios'); // CSRF protection
 const sanitize = require('sanitize')(); // Input sanitization
 const rateLimit = require('express-rate-limit');
-const allowedOrigins = [
-	'http://localhost:5173',
-	'https://sapa-tv.vercel.app/', // Set this in your production environment
-];
+
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 const app = express();
 
@@ -23,15 +20,9 @@ app.use(helmet()); // Use Helmet for security headers
 
 app.use(
 	cors({
-		origin: (origin, callback) => {
-			if (!origin || allowedOrigins.includes(origin)) {
-				callback(null, true);
-			} else {
-				callback(new Error('Not allowed by CORS'));
-			}
-		},
-		methods: 'GET, POST',
-		credentials: true,
+		origin: 'https://sapa-tv.vercel.app', // Replace with your frontend URL
+		methods: ['GET', 'POST'], // Specify allowed methods
+		credentials: true, // If your requests include cookies or authentication headers
 	})
 );
 app.use(bodyParser.json());
