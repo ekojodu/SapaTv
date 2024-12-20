@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-
 const Reseller = () => {
 	const plans = [
 		{ id: 81, name: 'Mobile Weekly', price: 1200 },
@@ -13,53 +11,87 @@ const Reseller = () => {
 	const [name, setName] = useState('');
 	const [email, setEmail] = useState('');
 	const [error, setError] = useState('');
-	const navigate = useNavigate();
 
-	// Calculate the total cost based on selected quantities
 	const totalCost = plans.reduce(
 		(total, plan) => total + (quantities[plan.id] || 0) * plan.price,
 		0
 	);
-
 	const handleQuantityChange = (id, value) => {
-		let quantity = parseInt(value);
-		if (Number.isNaN(quantity) || quantity % 10 !== 0) {
-			setError('Quantity must be a multiple of 10.');
-		} else {
-			setError('');
-		}
+		// Check if value is a valid number or empty string
+		const isValid = value === '' || /^[0-9]+$/.test(value); // Allow empty or numbers only
+		const errorMessage =
+			isValid && parseInt(value, 10) % 10 === 0
+				? ''
+				: 'Quantity must be a non-negative multiple of 10.';
 
-		// Set to 0 if invalid or empty input
-		if (Number.isNaN(quantity) || quantity < 0) {
-			quantity = 0;
-		}
-		setQuantities((prevQuantities) => ({
-			...prevQuantities,
-			[id]: quantity,
+		// Update the state based on the value (allowing empty input and valid numbers)
+		setQuantities((prev) => ({
+			...prev,
+			[id]: isValid ? value : prev[id], // Update only if valid
 		}));
+
+		// Set the error message if invalid
+		setError(errorMessage);
 	};
 
-	const handleProceedToPayment = (e) => {
+	const handleSubmit = async (e) => {
 		e.preventDefault();
-		if (totalCost <= 0) {
-			alert('Please select at least one plan.');
-			return;
-		}
+
+		// Check if name or email is missing
 		if (!name || !email) {
-			alert('Please enter your name and email.');
+			setError('Please provide both your name and email.');
 			return;
 		}
 
-		// Pass the details to the payment page
-		navigate('/resellerPayment', {
-			state: {
-				name,
-				email,
-				totalCost,
-				plans: plans.filter((plan) => quantities[plan.id] > 0),
-				quantities,
-			},
-		});
+		// Ensure that the total cost is greater than 0
+		if (totalCost <= 0) {
+			setError('Please select at least one plan.');
+			return;
+		}
+
+		// Filter plans with quantity greater than 0
+		const selectedPlans = plans
+			.filter((plan) => quantities[plan.id] > 0)
+			.map((plan) => ({
+				id: plan.id,
+				name: plan.name,
+				quantity: quantities[plan.id], // Send only selected plans
+				price: plan.price,
+			}));
+
+		// Log the selected plans and other data before sending
+
+		const data = {
+			name,
+			email,
+			// amount: totalCost,
+			plan: { plans: selectedPlans }, // Ensure this matches the backend expectations
+			type: 'reseller',
+		};
+
+		try {
+			const response = await fetch(
+				'https://sapatv.onrender.com/api/initiate-payment',
+				{
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(data),
+				}
+			);
+
+			const result = await response.json();
+
+			// console.log('Payment response:', result);
+
+			if (response.ok && result.paymentLink) {
+				window.location.href = result.paymentLink; // Redirecting to payment link
+			} else {
+				setError('Failed to initiate payment. Please try again.');
+			}
+		} catch (err) {
+			console.error('Error initiating payment:', err);
+			setError('An unexpected error occurred. Please try again later.');
+		}
 	};
 
 	return (
@@ -88,6 +120,7 @@ const Reseller = () => {
 					borderRadius: '10px',
 					boxShadow: '0 2px 6px rgba(0, 0, 0, 0.1)',
 				}}
+				onSubmit={handleSubmit}
 			>
 				{/* Name and Email Fields */}
 				<div style={{ marginBottom: '20px' }}>
@@ -189,9 +222,6 @@ const Reseller = () => {
 								value={quantities[plan.id] || ''}
 								placeholder='0'
 								onChange={(e) => handleQuantityChange(plan.id, e.target.value)}
-								onFocus={(e) => {
-									if (e.target.value === '0') e.target.value = ''; // Remove 0 on focus
-								}}
 								style={{
 									width: '60px',
 									padding: '5px',
@@ -199,9 +229,6 @@ const Reseller = () => {
 									border: '1px solid #ccc',
 								}}
 							/>
-							{error && (
-								<p style={{ color: 'red', fontSize: '0.9rem' }}>{error}</p>
-							)}
 						</div>
 					</div>
 				))}
@@ -223,7 +250,7 @@ const Reseller = () => {
 				{/* Proceed to Payment Button */}
 				<div style={{ textAlign: 'center', marginTop: '20px' }}>
 					<button
-						onClick={handleProceedToPayment}
+						type='submit'
 						style={{
 							backgroundColor: 'rgb(13, 197, 13)',
 							color: '#fff',
@@ -234,7 +261,9 @@ const Reseller = () => {
 							fontSize: 'clamp(1rem, 2.5vw, 1.2rem)',
 							transition: 'background-color 0.3s',
 						}}
-						onMouseEnter={(e) => (e.target.style.backgroundColor = 'green')}
+						onMouseEnter={(e) =>
+							(e.target.style.backgroundColor = 'rgb(9, 145, 9)')
+						}
 						onMouseLeave={(e) =>
 							(e.target.style.backgroundColor = 'rgb(13, 197, 13)')
 						}
@@ -242,6 +271,13 @@ const Reseller = () => {
 						Proceed to Payment
 					</button>
 				</div>
+
+				{/* Error Handling */}
+				{error && (
+					<div style={{ color: 'red', marginTop: '10px', fontSize: '1rem' }}>
+						{error}
+					</div>
+				)}
 			</form>
 		</div>
 	);

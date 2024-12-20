@@ -12,8 +12,8 @@ const axios = require('axios'); // CSRF protection
 const sanitize = require('sanitize')(); // Input sanitization
 const rateLimit = require('express-rate-limit');
 const allowedOrigins = [
-	process.env.FRONTEND_URL || 'http://localhost:5173',
-	process.env.PROD_FRONTEND_URL, // Set this in your production environment
+	'http://localhost:5173',
+	'https://sapa-tv.vercel.app/', // Set this in your production environment
 ];
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 const app = express();
@@ -542,45 +542,45 @@ app.get(
 
 			// console.log('Determined plan type:', plan.type);
 
-			// if (plan.type === 'reseller') {
-			// 	let emailContent = `Thank you for your purchase. Below are the details of your subscription:\n\n`;
-			// 	for (const planItem of plan.plans) {
-			// 		const planDetails = await fetchPlanDetails(planItem.id);
-			// 		if (!planDetails) {
-			// 			console.error('Plan not found:', planItem.id);
-			// 			return res
-			// 				.status(404)
-			// 				.json({ error: `Plan ${planItem.id} not found` });
-			// 		}
-			// 		const decryptedCodes = await fetchAndUpdateCodes(
-			// 			planItem.id,
-			// 			planItem.quantity
-			// 		);
-			// 		emailContent += `${customerName} - ${planDetails.PlanName} (${planDetails.Amount}):\n`;
-			// 		decryptedCodes.forEach((code) => {
-			// 			emailContent += `Code: ${code}\n`;
-			// 		});
-			// 	}
-			// 	await sendEmail(customerEmail, 'Your Subscription Codes', emailContent);
-			// 	// console.log('Email sent to customer:', customerEmail);
-			// } else if (plan.type === 'subscribe') {
-			// 	const planDetails = await fetchPlanDetails(plan.plans[0].id);
-			// 	if (!planDetails) {
-			// 		console.error('Plan not found:', plan.plans[0].id);
-			// 		return res
-			// 			.status(404)
-			// 			.json({ error: `Plan ${plan.plans[0].id} not found` });
-			// 	}
-			// 	const decryptedCode = (
-			// 		await fetchAndUpdateCodes(plan.plans[0].id, 1)
-			// 	)[0];
-			// 	const emailContent = ` Thank you for your subscription. Below are your subscription details:\n\n ${customerName} - ${planDetails.PlanName} (${planDetails.Amount}): ${decryptedCode} `;
-			// 	await sendEmail(customerEmail, 'Your Subscription Code', emailContent);
-			// 	// console.log('Email sent to customer:', customerEmail);
-			// } else {
-			// 	// console.error('Invalid payment type');
-			// 	return res.status(400).json({ error: 'Invalid payment type' });
-			// }
+			if (plan.type === 'reseller') {
+				let emailContent = `Thank you for your purchase. Below are the details of your subscription:\n\n`;
+				for (const planItem of plan.plans) {
+					const planDetails = await fetchPlanDetails(planItem.id);
+					if (!planDetails) {
+						console.error('Plan not found:', planItem.id);
+						return res
+							.status(404)
+							.json({ error: `Plan ${planItem.id} not found` });
+					}
+					const decryptedCodes = await fetchAndUpdateCodes(
+						planItem.id,
+						planItem.quantity
+					);
+					emailContent += `${customerName} - ${planDetails.PlanName} (${planDetails.Amount}):\n`;
+					decryptedCodes.forEach((code) => {
+						emailContent += `Code: ${code}\n`;
+					});
+				}
+				await sendEmail(customerEmail, 'Your Subscription Codes', emailContent);
+				// console.log('Email sent to customer:', customerEmail);
+			} else if (plan.type === 'subscribe') {
+				const planDetails = await fetchPlanDetails(plan.plans[0].id);
+				if (!planDetails) {
+					console.error('Plan not found:', plan.plans[0].id);
+					return res
+						.status(404)
+						.json({ error: `Plan ${plan.plans[0].id} not found` });
+				}
+				const decryptedCode = (
+					await fetchAndUpdateCodes(plan.plans[0].id, 1)
+				)[0];
+				const emailContent = ` Thank you for your subscription. Below are your subscription details:\n\n ${customerName} - ${planDetails.PlanName} (${planDetails.Amount}): ${decryptedCode} `;
+				await sendEmail(customerEmail, 'Your Subscription Code', emailContent);
+				// console.log('Email sent to customer:', customerEmail);
+			} else {
+				// console.error('Invalid payment type');
+				return res.status(400).json({ error: 'Invalid payment type' });
+			}
 
 			// Prepare the compact data object
 			const transactionData = {

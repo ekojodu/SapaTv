@@ -8,13 +8,11 @@ import Download from './assets/components/Download/Download';
 import Contact from './assets/components/Contact/Contact';
 import Subscribe from './assets/components/Subscribe/Subscribe';
 import ErrorBoundary from './assets/components/ErrorBoundary/ErrorBoundary'; // Import ErrorBoundary
-import CompleteTransaction from './assets/components/CompleteTransaction/CompleteTransaction';
 import Footer from './assets/components/Footer/Footer';
 import Faq from './assets/components/Faq/Faq';
 import Reseller from './assets/components/Reseller/Reseller';
-import ResellerPayment from './assets/components/ResellerPayment/ResellerPayment';
-import ThankYou from './assets/components/ThankYou/ThankYou';
 import ResellerProgram from './assets/components/Reseller Program/Resellerprogram';
+import PaymentSummary from './assets/components/CompleteTransaction/PaymentSummary';
 
 const App = () => {
 	return (
@@ -57,10 +55,10 @@ const App = () => {
 								}
 							/>
 							<Route
-								path='/complete-transaction'
+								path='/payment-summary'
 								element={
 									<ErrorBoundary>
-										<CompleteTransaction />
+										<PaymentSummary />
 									</ErrorBoundary>
 								}
 							/>
@@ -70,22 +68,6 @@ const App = () => {
 								element={
 									<ErrorBoundary>
 										<Reseller />
-									</ErrorBoundary>
-								}
-							/>
-							<Route
-								path='/resellerPayment'
-								element={
-									<ErrorBoundary>
-										<ResellerPayment />
-									</ErrorBoundary>
-								}
-							/>
-							<Route
-								path='/thank-you'
-								element={
-									<ErrorBoundary>
-										<ThankYou />
 									</ErrorBoundary>
 								}
 							/>

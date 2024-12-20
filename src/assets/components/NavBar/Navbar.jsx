@@ -68,7 +68,9 @@ const Navbar = () => {
 			<div className='navbar-container'>
 				{/* Navbar logo */}
 				<div className='navbar-logo'>
-					<img src={logo} alt='Logo' />
+					<a href='http://localhost:5173/'>
+						<img src={logo} alt='Logo' />
+					</a>
 				</div>
 
 				{/* Menu Icon for small screens */}
