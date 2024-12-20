@@ -375,7 +375,7 @@ app.post('/api/initiate-payment', async (req, res) => {
 				tx_ref: reference,
 				amount: plan.price,
 				currency: 'NGN',
-				redirect_url: 'https://sapatv.onrender.com/api/confirm-payment',
+				redirect_url: `${apiUrl}/confirm-payment`,
 				customer: { name, email },
 			};
 		} else if (type === 'reseller') {
@@ -404,7 +404,7 @@ app.post('/api/initiate-payment', async (req, res) => {
 				tx_ref: reference,
 				amount: resellerAmount,
 				currency: 'NGN',
-				redirect_url: 'https://sapatv.onrender.com/api/confirm-payment',
+				redirect_url: `${apiUrl}/confirm-payment`,
 				customer: { name, email },
 			};
 		}
@@ -589,7 +589,7 @@ app.get(
 			);
 
 			// Define the base URL for the frontend
-			const baseUrl = `${process.env.FRONTEND_URL}/payment-summary`;
+			const baseUrl = 'https://sapatv.vercel.app/api/payment-summary';
 
 			// Construct the short URL
 			const shortUrl = `${baseUrl}?data=${encodeURIComponent(encodedData)}`;
