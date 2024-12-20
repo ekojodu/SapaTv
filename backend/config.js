@@ -525,18 +525,16 @@ app.get('/api/confirm-payment', async (req, res) => {
 
 								const transactions = await Transactions.findAll({
 									where: { Reference: tx_ref },
-									attributes: [
-										'PlanId',
-										[sequelize.literal('Amount/Quantity'), 'quantity'],
-									],
+									attributes: ['PlanId', 'Amount', 'Quantity'],
 									group: ['PlanId'],
 								});
 
 								console.log('Transactions found:', transactions);
 
+								// Handle quantity calculation in JavaScript
 								return transactions.map((trx) => ({
 									id: trx.PlanId,
-									quantity: trx.getDataValue('quantity'),
+									quantity: trx.Amount / trx.Quantity,
 								}));
 							} catch (error) {
 								console.error('Error in findAll query:', error);
