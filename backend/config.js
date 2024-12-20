@@ -483,6 +483,9 @@ app.get(
 			const { flw_ref, status, meta, id, customer } = verificationData.data;
 			const paymentUrl = meta?.__CheckoutInitAddress;
 
+			// Log transaction verification success
+			console.log('Transaction verified successfully:', verificationData);
+
 			// Check if transaction exists
 			const transaction = await Transactions.findOne({
 				where: { Reference: tx_ref },
@@ -493,7 +496,7 @@ app.get(
 			}
 
 			// Update the transaction status and references
-			await Transactions.update(
+			const updateResult = await Transactions.update(
 				{
 					TrxId: id,
 					TransactionStatus: status === 'successful' ? 1 : 0,
@@ -502,6 +505,9 @@ app.get(
 				},
 				{ where: { Reference: tx_ref } }
 			);
+
+			// Log transaction update result
+			console.log('Transaction updated successfully:', updateResult);
 
 			if (status !== 'successful') {
 				console.error('Transaction verification failed:', status);
@@ -595,13 +601,12 @@ app.get(
 			const encodedData = Buffer.from(JSON.stringify(transactionData)).toString(
 				'base64'
 			);
-
 			// Define the base URL for the frontend
 			const baseUrl = 'https://sapatv.vercel.app/payment-summary';
-
 			// Construct the short URL
 			const shortUrl = `${baseUrl}?data=${encodeURIComponent(encodedData)}`;
-
+			// Log the short URL before redirecting
+			console.log('Redirecting to:', shortUrl);
 			// Redirect to the frontend with the short URL
 			return res.redirect(shortUrl);
 		} catch (error) {
