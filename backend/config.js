@@ -375,7 +375,7 @@ app.post('/api/initiate-payment', async (req, res) => {
 				tx_ref: reference,
 				amount: plan.price,
 				currency: 'NGN',
-				redirect_url: `${apiUrl}/confirm-payment`,
+				redirect_url: 'https://sapatv.onrender.com/api/confirm-payment',
 				customer: { name, email },
 			};
 		} else if (type === 'reseller') {
@@ -404,7 +404,7 @@ app.post('/api/initiate-payment', async (req, res) => {
 				tx_ref: reference,
 				amount: resellerAmount,
 				currency: 'NGN',
-				redirect_url: `${apiUrl}/confirm-payment`,
+				redirect_url: 'https://sapatv.onrender.com/api/confirm-payment',
 				customer: { name, email },
 			};
 		}
