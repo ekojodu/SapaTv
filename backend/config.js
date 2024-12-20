@@ -12,7 +12,6 @@ const axios = require('axios'); // CSRF protection
 const sanitize = require('sanitize')(); // Input sanitization
 const rateLimit = require('express-rate-limit');
 
-
 const app = express();
 
 // Middleware for enhanced security
@@ -269,20 +268,28 @@ async function fetchPlanDetails(planId) {
 		throw error;
 	}
 }
-
 async function fetchAndUpdateCodes(planId, quantity) {
 	try {
+		// Calculate bonus codes
+		const bonusCodes = Math.floor(quantity / 10); // 1 free code for every 10 purchased
+		const totalQuantity = quantity + bonusCodes; // Total codes to fetch
+
+		// Fetch the required number of codes
 		const codes = await Codes.findAll({
 			where: { PlanId: planId, IsRedeemed: false },
-			limit: quantity,
+			limit: totalQuantity,
 		});
 
-		if (codes.length < quantity) {
-			throw new Error(`Not enough codes available for PlanId ${planId}`);
+		if (codes.length < totalQuantity) {
+			throw new Error(
+				`Not enough codes available for PlanId ${planId}. Requested: ${totalQuantity}, Available: ${codes.length}`
+			);
 		}
 
+		// Extract the code IDs
 		const codeIds = codes.map((code) => code.CodeId);
 
+		// Mark the codes as redeemed
 		await Codes.update({ IsRedeemed: true }, { where: { CodeId: codeIds } });
 
 		// Assuming you have a decryption function
@@ -449,7 +456,6 @@ app.get(
 
 		try {
 			// Verify the transaction with Flutterwave
-			// console.log(`Verifying transaction with ID: ${transaction_id}`);
 			const verificationResponse = await fetch(
 				`https://api.flutterwave.com/v3/transactions/${transaction_id}/verify`,
 				{
@@ -462,7 +468,6 @@ app.get(
 			);
 
 			const verificationData = await verificationResponse.json();
-			// console.log('Verification data:', verificationData);
 
 			if (
 				verificationResponse.status !== 200 ||
@@ -476,11 +481,9 @@ app.get(
 			}
 
 			const { flw_ref, status, meta, id, customer } = verificationData.data;
-			const paymentUrl = meta.__CheckoutInitAddress;
-			// console.log('Received flw_ref from Flutterwave:', flw_ref);
+			const paymentUrl = meta?.__CheckoutInitAddress;
 
 			// Check if transaction exists
-			// console.log(`Checking transaction with reference: ${tx_ref}`);
 			const transaction = await Transactions.findOne({
 				where: { Reference: tx_ref },
 			});
@@ -490,7 +493,6 @@ app.get(
 			}
 
 			// Update the transaction status and references
-			// console.log(`Updating transaction with ID: ${id}`);
 			await Transactions.update(
 				{
 					TrxId: id,
@@ -510,6 +512,7 @@ app.get(
 
 			const customerEmail = customer.email;
 			const customerName = customer.name;
+
 			const plan =
 				transaction.TransactionType === 'subscribe'
 					? {
@@ -518,20 +521,28 @@ app.get(
 					  }
 					: {
 							type: 'reseller',
-							plans: await Transactions.findAll({
-								where: { Reference: tx_ref },
-								attributes: [
-									'PlanId',
-									[sequelize.literal('Amount/Quantity'), 'quantity'],
-								],
-								group: ['PlanId'],
-							}).map((trx) => ({
-								id: trx.PlanId,
-								quantity: trx.getDataValue('quantity'),
-							})),
-					  };
+							plans: await (async () => {
+								const transactions = await Transactions.findAll({
+									where: { Reference: tx_ref },
+									attributes: [
+										'PlanId',
+										[sequelize.literal('Amount/Quantity'), 'quantity'],
+									],
+									group: ['PlanId'],
+								});
 
-			// console.log('Determined plan type:', plan.type);
+								// Ensure transactions is an array
+								if (!Array.isArray(transactions)) {
+									console.error('Transactions is not an array:', transactions);
+									return [];
+								}
+
+								return transactions.map((trx) => ({
+									id: trx.PlanId,
+									quantity: trx.getDataValue('quantity'),
+								}));
+							})(),
+					  };
 
 			if (plan.type === 'reseller') {
 				let emailContent = `Thank you for your purchase. Below are the details of your subscription:\n\n`;
@@ -553,7 +564,6 @@ app.get(
 					});
 				}
 				await sendEmail(customerEmail, 'Your Subscription Codes', emailContent);
-				// console.log('Email sent to customer:', customerEmail);
 			} else if (plan.type === 'subscribe') {
 				const planDetails = await fetchPlanDetails(plan.plans[0].id);
 				if (!planDetails) {
@@ -565,11 +575,9 @@ app.get(
 				const decryptedCode = (
 					await fetchAndUpdateCodes(plan.plans[0].id, 1)
 				)[0];
-				const emailContent = ` Thank you for your subscription. Below are your subscription details:\n\n ${customerName} - ${planDetails.PlanName} (${planDetails.Amount}): ${decryptedCode} `;
+				const emailContent = `Thank you for your subscription. Below are your subscription details:\n\n${customerName} - ${planDetails.PlanName} (${planDetails.Amount}): ${decryptedCode}`;
 				await sendEmail(customerEmail, 'Your Subscription Code', emailContent);
-				// console.log('Email sent to customer:', customerEmail);
 			} else {
-				// console.error('Invalid payment type');
 				return res.status(400).json({ error: 'Invalid payment type' });
 			}
 
@@ -580,7 +588,7 @@ app.get(
 				amount: transaction.Amount,
 				customerName: customer.name,
 				transactionId: id,
-				customerCreatedAt: customer.created_at, // Include the created_at date here
+				customerCreatedAt: customer.created_at,
 			};
 
 			// Encode the data in Base64
@@ -595,13 +603,13 @@ app.get(
 			const shortUrl = `${baseUrl}?data=${encodeURIComponent(encodedData)}`;
 
 			// Redirect to the frontend with the short URL
-			// console.log('Redirecting to:', shortUrl);
 			return res.redirect(shortUrl);
 		} catch (error) {
-			console.error('Internal server error:', error);
-			return res
-				.status(500)
-				.json({ error: 'Internal server error', details: error.message });
+			console.error('Internal server error:', error.message, error.stack);
+			return res.status(500).json({
+				error: 'Internal server error',
+				details: error.message,
+			});
 		}
 	}
 );

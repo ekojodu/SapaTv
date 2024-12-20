@@ -1,9 +1,9 @@
 import { useState } from 'react';
 const Reseller = () => {
 	const plans = [
-		{ id: 81, name: 'Mobile Weekly', price: 1200 },
+		{ id: 81, name: 'Mobile Weekly', price: 1300 },
 		{ id: 82, name: 'Mobile Monthly', price: 3300 },
-		{ id: 83, name: 'Standard Weekly', price: 2100 },
+		{ id: 83, name: 'Standard Weekly', price: 1800 },
 		{ id: 84, name: 'Standard Monthly', price: 6800 },
 	];
 
