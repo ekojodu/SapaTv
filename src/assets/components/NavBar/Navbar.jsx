@@ -68,7 +68,7 @@ const Navbar = () => {
 			<div className='navbar-container'>
 				{/* Navbar logo */}
 				<div className='navbar-logo'>
-					<a href='http://localhost:5173/'>
+					<a href='https://sapa-tv.vercel.app'>
 						<img src={logo} alt='Logo' />
 					</a>
 				</div>
