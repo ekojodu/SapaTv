@@ -664,7 +664,7 @@ app.get(
 				'base64'
 			);
 
-			const baseUrl = 'https://sapatv.vercel.app/summary';
+			const baseUrl = 'https://sapa-tv.vercel.app/summary';
 
 			const shortUrl = `${baseUrl}?data=${encodeURIComponent(encodedData)}`;
 
