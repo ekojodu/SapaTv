@@ -545,7 +545,7 @@ app.get(
 									}
 
 									const planDetails = await Plans.findOne({
-										where: { id: trx.PlanId },
+										where: { PlanId: trx.PlanId },
 									});
 
 									console.log('Plan details retrieved:', planDetails);
@@ -577,7 +577,7 @@ app.get(
 									);
 
 									return {
-										id: trx.PlanId,
+										PlanId: trx.PlanId,
 										quantity: Math.floor(trx.Amount / resellerPrice),
 									};
 								})
