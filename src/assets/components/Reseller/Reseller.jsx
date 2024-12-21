@@ -59,7 +59,7 @@ const Reseller = () => {
 				price: plan.price,
 			}));
 
-		// Log the selected plans and other data before sending
+		
 
 		const data = {
 			name,

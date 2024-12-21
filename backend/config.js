@@ -534,18 +534,39 @@ app.get('/api/confirm-payment', async (req, res) => {
 								return transactions.map((trx) => {
 									// Ensure plan is defined and valid JSON
 									if (!trx.plan) {
+										console.error(
+											'Missing plan data for transaction:',
+											trx.TransactionId
+										);
 										throw new Error(
 											`Plan details not found for transaction: ${trx.TransactionId}`
 										);
 									}
-									const planDetails = JSON.parse(trx.plan).plans.find(
-										(plan) => plan.id === trx.PlanId
-									);
+
+									let planDetails;
+									try {
+										planDetails = JSON.parse(trx.plan).plans.find(
+											(plan) => plan.id === trx.PlanId
+										);
+									} catch (parseError) {
+										console.error(
+											'Error parsing plan data for transaction:',
+											trx.TransactionId,
+											parseError
+										);
+										throw new Error('Error parsing plan data');
+									}
+
 									if (!planDetails) {
+										console.error(
+											'Plan details not found for PlanId:',
+											trx.PlanId
+										);
 										throw new Error(
 											`Plan details not found for PlanId: ${trx.PlanId}`
 										);
 									}
+
 									return {
 										id: trx.PlanId,
 										quantity: trx.Amount / planDetails.price, // Use price from plans object
