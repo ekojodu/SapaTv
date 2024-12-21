@@ -460,7 +460,6 @@ app.get(
 				return res.status(400).json({ error: 'Payment not successful' });
 			}
 
-			// Verify the transaction with Flutterwave
 			const verificationResponse = await fetch(
 				`https://api.flutterwave.com/v3/transactions/${transaction_id}/verify`,
 				{
@@ -499,7 +498,6 @@ app.get(
 				return res.status(404).json({ error: 'Transaction not found' });
 			}
 
-			// Update transaction details
 			await Transactions.update(
 				{
 					TrxId: id,
@@ -536,7 +534,7 @@ app.get(
 
 							return Promise.all(
 								transactions.map(async (trx) => {
-									if (!trx.PlanId || trx.amount === undefined) {
+									if (!trx.PlanId || trx.Amount === undefined) {
 										console.error(
 											'Missing PlanId or Amount for transaction:',
 											trx.TransactionId
@@ -546,10 +544,11 @@ app.get(
 										);
 									}
 
-									// Fetch Plan details
 									const planDetails = await Plans.findOne({
 										where: { id: trx.PlanId },
 									});
+
+									console.log('Plan details retrieved:', planDetails);
 
 									if (!planDetails || !planDetails.Amount) {
 										console.error(
@@ -561,7 +560,6 @@ app.get(
 										);
 									}
 
-									// Reseller price calculation
 									const resellerPrice = planDetails.Amount - 200;
 
 									if (resellerPrice <= 0) {
@@ -575,12 +573,12 @@ app.get(
 									}
 
 									console.log(
-										`Calculating quantity for transaction ${trx.TransactionId}: Amount (${trx.amount}) / Reseller Price (${resellerPrice})`
+										`Calculating quantity for transaction ${trx.TransactionId}: Amount (${trx.Amount}) / Reseller Price (${resellerPrice})`
 									);
 
 									return {
 										id: trx.PlanId,
-										quantity: Math.floor(trx.amount / resellerPrice),
+										quantity: Math.floor(trx.Amount / resellerPrice),
 									};
 								})
 							);
@@ -596,7 +594,6 @@ app.get(
 
 			console.log('Plan Data:', plan);
 
-			// Send email based on the plan type
 			if (plan.type === 'reseller') {
 				let emailContent = `Thank you for your purchase. Below are the details of your subscription:\n\n`;
 				for (const planItem of plan.plans) {
@@ -646,7 +643,7 @@ app.get(
 			const transactionData = {
 				reference: tx_ref,
 				status: verificationData.data.status,
-				amount: transaction.amount,
+				amount: transaction.Amount,
 				customerName: customer.name,
 				transactionId: id,
 				customerCreatedAt: customer.created_at,
