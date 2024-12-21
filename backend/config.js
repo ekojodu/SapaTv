@@ -598,18 +598,18 @@ app.get(
 				let emailContent = `Thank you for your purchase. Below are the details of your subscription:\n\n`;
 				for (const planItem of plan.plans) {
 					const planDetails = await Plans.findOne({
-						where: { id: planItem.id },
+						where: { PlanId: planItem.PlanId },
 					});
 
 					if (!planDetails) {
-						console.error('Plan not found:', planItem.id);
+						console.error('Plan not found:', planItem.PlanId);
 						return res
 							.status(404)
-							.json({ error: `Plan ${planItem.id} not found` });
+							.json({ error: `Plan ${planItem.PlanId} not found` });
 					}
 
 					const decryptedCodes = await fetchAndUpdateCodes(
-						planItem.id,
+						planItem.PlanId,
 						planItem.quantity
 					);
 
@@ -623,16 +623,16 @@ app.get(
 				await sendEmail(customerEmail, 'Your Subscription Codes', emailContent);
 			} else if (plan.type === 'subscribe') {
 				const planDetails = await Plans.findOne({
-					where: { id: plan.plans[0].id },
+					where: { PlanId: plan.plans[0].PlanId },
 				});
 				if (!planDetails) {
-					console.error('Plan not found:', plan.plans[0].id);
+					console.error('Plan not found:', plan.plans[0].PlanId);
 					return res
 						.status(404)
-						.json({ error: `Plan ${plan.plans[0].id} not found` });
+						.json({ error: `Plan ${plan.plans[0].PlanId} not found` });
 				}
 				const decryptedCode = (
-					await fetchAndUpdateCodes(plan.plans[0].id, 1)
+					await fetchAndUpdateCodes(plan.plans[0].PlanId, 1)
 				)[0];
 				const emailContent = `Thank you for your subscription. Below are your subscription details:\n\n${customerName} - ${planDetails.PlanName} (${planDetails.Amount}): ${decryptedCode}`;
 				await sendEmail(customerEmail, 'Your Subscription Code', emailContent);
