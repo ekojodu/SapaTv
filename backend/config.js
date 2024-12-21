@@ -494,7 +494,7 @@ app.get(
 			});
 
 			if (!transaction) {
-				console.error('Transaction not found for reference:', tx_ref);
+				// console.error('Transaction not found for reference:', tx_ref);
 				return res.status(404).json({ error: 'Transaction not found' });
 			}
 
@@ -552,21 +552,21 @@ app.get(
 					type: 'reseller',
 					plans: await (async () => {
 						try {
-							console.log('Finding all transactions with tx_ref:', tx_ref);
+							// console.log('Finding all transactions with tx_ref:', tx_ref);
 
 							const transactions = await Transactions.findAll({
 								where: { Reference: tx_ref },
 							});
 
-							console.log('Transactions found:', transactions);
+							// console.log('Transactions found:', transactions);
 
 							return Promise.all(
 								transactions.map(async (trx) => {
 									if (!trx.PlanId || trx.Amount === undefined) {
-										console.error(
-											'Missing PlanId or Amount for transaction:',
-											trx.TransactionId
-										);
+										// console.error(
+										// 	'Missing PlanId or Amount for transaction:',
+										// 	trx.TransactionId
+										// );
 										throw new Error(
 											`Plan or Amount details not found for transaction: ${trx.TransactionId}`
 										);
@@ -576,7 +576,7 @@ app.get(
 										where: { PlanId: trx.PlanId },
 									});
 
-									console.log('Plan details retrieved:', planDetails);
+									// console.log('Plan details retrieved:', planDetails);
 
 									if (!planDetails || !planDetails.Amount) {
 										console.error(
@@ -600,9 +600,9 @@ app.get(
 										);
 									}
 
-									console.log(
-										`Calculating quantity for transaction ${trx.TransactionId}: Amount (${trx.Amount}) / Reseller Price (${resellerPrice})`
-									);
+									// console.log(
+									// 	`Calculating quantity for transaction ${trx.TransactionId}: Amount (${trx.Amount}) / Reseller Price (${resellerPrice})`
+									// );
 
 									return {
 										PlanId: trx.PlanId,
@@ -620,7 +620,7 @@ app.get(
 				return res.status(400).json({ error: 'Invalid payment type' });
 			}
 
-			console.log('Plan Data:', plan);
+			// console.log('Plan Data:', plan);
 
 			if (plan.type === 'reseller') {
 				let emailContent = `Thank you for your purchase. Below are the details of your subscription:\n\n`;
@@ -668,7 +668,7 @@ app.get(
 
 			const shortUrl = `${baseUrl}?data=${encodeURIComponent(encodedData)}`;
 
-			console.log('Redirecting to:', shortUrl);
+			// console.log('Redirecting to:', shortUrl);
 
 			return res.redirect(shortUrl);
 		} catch (error) {

@@ -1,7 +1,7 @@
 {
 	"rewrites": [
 		{
-			"source": "/payment-summary",
+			"source": "/summary",
 			"destination": "/index.html"
 		}
 	]
