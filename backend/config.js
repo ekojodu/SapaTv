@@ -499,6 +499,7 @@ app.get(
 				return res.status(404).json({ error: 'Transaction not found' });
 			}
 
+			// Update transaction details
 			await Transactions.update(
 				{
 					TrxId: id,
@@ -513,76 +514,89 @@ app.get(
 			const customerEmail = customer.email;
 			const customerName = customer.name;
 
-			const plan =
-				transaction.TransactionType === 'subscribe'
-					? {
-							type: 'subscribe',
-							plans: [{ id: transaction.PlanId }],
-					  }
-					: {
-							type: 'reseller',
-							plans: await (async () => {
-								try {
-									console.log('Finding all transactions with tx_ref:', tx_ref);
+			let plan;
 
-									const transactions = await Transactions.findAll({
-										where: { Reference: tx_ref },
+			if (transaction.TransactionType === 'subscribe') {
+				plan = {
+					type: 'subscribe',
+					plans: [{ id: transaction.PlanId }],
+				};
+			} else if (transaction.TransactionType === 'reseller') {
+				plan = {
+					type: 'reseller',
+					plans: await (async () => {
+						try {
+							console.log('Finding all transactions with tx_ref:', tx_ref);
+
+							const transactions = await Transactions.findAll({
+								where: { Reference: tx_ref },
+							});
+
+							console.log('Transactions found:', transactions);
+
+							return Promise.all(
+								transactions.map(async (trx) => {
+									if (!trx.PlanId || trx.amount === undefined) {
+										console.error(
+											'Missing PlanId or Amount for transaction:',
+											trx.TransactionId
+										);
+										throw new Error(
+											`Plan or Amount details not found for transaction: ${trx.TransactionId}`
+										);
+									}
+
+									// Fetch Plan details
+									const planDetails = await Plans.findOne({
+										where: { id: trx.PlanId },
 									});
 
-									console.log('Transactions found:', transactions);
+									if (!planDetails || !planDetails.Amount) {
+										console.error(
+											'Plan not found or missing Amount for PlanId:',
+											trx.PlanId
+										);
+										throw new Error(
+											`Plan not found or missing Amount for PlanId: ${trx.PlanId}`
+										);
+									}
 
-									return Promise.all(
-										transactions.map(async (trx) => {
-											if (!trx.PlanId || trx.amount === undefined) {
-												console.error(
-													'Missing PlanId or Amount for transaction:',
-													trx.TransactionId
-												);
-												throw new Error(
-													`Plan or Amount details not found for transaction: ${trx.TransactionId}`
-												);
-											}
+									// Reseller price calculation
+									const resellerPrice = planDetails.Amount - 200;
 
-											// Fetch Plan details
-											const planDetails = await Plans.findOne({
-												where: { id: trx.PlanId },
-											});
+									if (resellerPrice <= 0) {
+										console.error(
+											'Invalid reseller price calculated:',
+											resellerPrice
+										);
+										throw new Error(
+											`Invalid reseller price calculated: ${resellerPrice}`
+										);
+									}
 
-											if (!planDetails) {
-												console.error('Plan not found for PlanId:', trx.PlanId);
-												throw new Error(
-													`Plan not found for PlanId: ${trx.PlanId}`
-												);
-											}
-
-											// Reseller price calculation
-											const resellerPrice = planDetails.Amount - 200;
-
-											if (resellerPrice <= 0) {
-												throw new Error(
-													`Invalid reseller price calculated: ${resellerPrice}`
-												);
-											}
-
-											console.log(
-												`Calculating quantity for transaction ${trx.TransactionId}: Amount (${trx.amount}) / Reseller Price (${resellerPrice})`
-											);
-
-											return {
-												id: trx.PlanId,
-												quantity: Math.floor(trx.amount / resellerPrice),
-											};
-										})
+									console.log(
+										`Calculating quantity for transaction ${trx.TransactionId}: Amount (${trx.amount}) / Reseller Price (${resellerPrice})`
 									);
-								} catch (error) {
-									console.error('Error in findAll query:', error);
-									throw error;
-								}
-							})(),
-					  };
+
+									return {
+										id: trx.PlanId,
+										quantity: Math.floor(trx.amount / resellerPrice),
+									};
+								})
+							);
+						} catch (error) {
+							console.error('Error in findAll query:', error);
+							throw error;
+						}
+					})(),
+				};
+			} else {
+				return res.status(400).json({ error: 'Invalid payment type' });
+			}
 
 			console.log('Plan Data:', plan);
 
+			// Send email based on the plan type
 			if (plan.type === 'reseller') {
 				let emailContent = `Thank you for your purchase. Below are the details of your subscription:\n\n`;
 				for (const planItem of plan.plans) {
