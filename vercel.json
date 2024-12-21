@@ -1,8 +1,3 @@
 {
-	"rewrites": [
-		{
-			"source": "/payment-summary",
-			"destination": "/index.html"
-		}
-	]
+	"rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
