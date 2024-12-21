@@ -515,10 +515,38 @@ app.get(
 			let plan;
 
 			if (transaction.TransactionType === 'subscribe') {
+				console.log('Processing subscribe transaction:', transaction.PlanId);
+
+				const planDetails = await Plans.findOne({
+					where: { PlanId: transaction.PlanId },
+				});
+
+				if (!planDetails) {
+					console.error('Plan not found:', transaction.PlanId);
+					return res
+						.status(404)
+						.json({ error: `Plan ${transaction.PlanId} not found` });
+				}
+
 				plan = {
 					type: 'subscribe',
-					plans: [{ id: transaction.PlanId }],
+					plans: [
+						{
+							PlanId: planDetails.PlanId,
+							PlanName: planDetails.PlanName,
+							Amount: planDetails.Amount,
+							DurationInDays: planDetails.DurationInDays,
+						},
+					],
 				};
+
+				console.log('Plan details for subscribe transaction:', plan);
+
+				const decryptedCode = (
+					await fetchAndUpdateCodes(transaction.PlanId, 1)
+				)[0];
+				const emailContent = `Thank you for your subscription. Below are your subscription details:\n\n${customerName} - ${plan.plans[0].PlanName} (${plan.plans[0].Amount}): ${decryptedCode}`;
+				await sendEmail(customerEmail, 'Your Subscription Code', emailContent);
 			} else if (transaction.TransactionType === 'reseller') {
 				plan = {
 					type: 'reseller',
@@ -621,23 +649,6 @@ app.get(
 					});
 				}
 				await sendEmail(customerEmail, 'Your Subscription Codes', emailContent);
-			} else if (plan.type === 'subscribe') {
-				const planDetails = await Plans.findOne({
-					where: { PlanId: plan.plans[0].PlanId },
-				});
-				if (!planDetails) {
-					console.error('Plan not found:', plan.plans[0].PlanId);
-					return res
-						.status(404)
-						.json({ error: `Plan ${plan.plans[0].PlanId} not found` });
-				}
-				const decryptedCode = (
-					await fetchAndUpdateCodes(plan.plans[0].PlanId, 1)
-				)[0];
-				const emailContent = `Thank you for your subscription. Below are your subscription details:\n\n${customerName} - ${planDetails.PlanName} (${planDetails.Amount}): ${decryptedCode}`;
-				await sendEmail(customerEmail, 'Your Subscription Code', emailContent);
-			} else {
-				return res.status(400).json({ error: 'Invalid payment type' });
 			}
 
 			const transactionData = {
