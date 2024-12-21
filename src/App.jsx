@@ -55,7 +55,7 @@ const App = () => {
 								}
 							/>
 							<Route
-								path='/payment-summary'
+								path='/summary'
 								element={
 									<ErrorBoundary>
 										<PaymentSummary />

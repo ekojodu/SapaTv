@@ -643,7 +643,7 @@ app.get(
 
 					console.log('Decrypted Codes:', decryptedCodes);
 
-					emailContent += `${customerName} - ${planDetails.PlanName} (${planDetails.Amount}):\n`;
+					emailContent += `${customerName} - ${planDetails.PlanName}:\n`;
 					decryptedCodes.forEach((code) => {
 						emailContent += `Code: ${code}\n`;
 					});
@@ -664,7 +664,7 @@ app.get(
 				'base64'
 			);
 
-			const baseUrl = 'https://sapatv.vercel.app/payment-summary';
+			const baseUrl = 'https://sapatv.vercel.app/summary';
 
 			const shortUrl = `${baseUrl}?data=${encodeURIComponent(encodedData)}`;
 
