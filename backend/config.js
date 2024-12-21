@@ -244,30 +244,30 @@ const paymentConfirmationLimiter = rateLimit({
 	legacyHeaders: true, // Disable the `X-RateLimit-*` headers
 });
 
-async function fetchPlanDetails(planId) {
-	try {
-		const planDetails = await Plans.findOne({
-			where: { PlanId: planId },
-			attributes: [
-				'PlanId',
-				'PlanName',
-				'Amount',
-				'DurationInDays',
-				'IsArchived',
-				'ImageUrl',
-			],
-		});
+// async function fetchPlanDetails(planId) {
+// 	try {
+// 		const planDetails = await Plans.findOne({
+// 			where: { PlanId: planId },
+// 			attributes: [
+// 				'PlanId',
+// 				'PlanName',
+// 				'Amount',
+// 				'DurationInDays',
+// 				'IsArchived',
+// 				'ImageUrl',
+// 			],
+// 		});
 
-		if (!planDetails) {
-			console.error('No plan details found for PlanId:', planId);
-		}
+// 		if (!planDetails) {
+// 			console.error('No plan details found for PlanId:', planId);
+// 		}
 
-		return planDetails;
-	} catch (error) {
-		console.error('Error fetching plan details:', error);
-		throw error;
-	}
-}
+// 		return planDetails;
+// 	} catch (error) {
+// 		console.error('Error fetching plan details:', error);
+// 		throw error;
+// 	}
+// }
 async function fetchAndUpdateCodes(planId, quantity) {
 	try {
 		// Calculate bonus codes
@@ -448,208 +448,216 @@ app.post('/api/initiate-payment', async (req, res) => {
 			.json({ error: 'Internal server error', details: error.message });
 	}
 });
-app.get('/api/confirm-payment', async (req, res) => {
-	try {
-		const { status, tx_ref, transaction_id } = req.query;
+app.get(
+	'/api/confirm-payment',
+	paymentConfirmationLimiter,
+	async (req, res) => {
+		try {
+			const { status, tx_ref, transaction_id } = req.query;
 
-		if (status !== 'successful') {
-			console.error('Payment not successful:', status);
-			return res.status(400).json({ error: 'Payment not successful' });
-		}
-
-		// Verify the transaction with Flutterwave
-		const verificationResponse = await fetch(
-			`https://api.flutterwave.com/v3/transactions/${transaction_id}/verify`,
-			{
-				method: 'GET',
-				headers: {
-					Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}`,
-					'Content-Type': 'application/json',
-				},
+			if (status !== 'successful') {
+				console.error('Payment not successful:', status);
+				return res.status(400).json({ error: 'Payment not successful' });
 			}
-		);
 
-		const verificationData = await verificationResponse.json();
-
-		if (
-			verificationResponse.status !== 200 ||
-			verificationData.status !== 'success'
-		) {
-			console.error('Failed to verify transaction:', verificationData);
-			return res.status(500).json({
-				error: 'Failed to verify transaction',
-				details: verificationData,
-			});
-		}
-
-		const { flw_ref, meta, id, customer } = verificationData.data;
-		const paymentUrl = meta?.__CheckoutInitAddress;
-
-		console.log('Verification Data:', verificationData);
-
-		const transaction = await Transactions.findOne({
-			where: { Reference: tx_ref },
-		});
-
-		if (!transaction) {
-			console.error('Transaction not found for reference:', tx_ref);
-			return res.status(404).json({ error: 'Transaction not found' });
-		}
-
-		const updateResult = await Transactions.update(
-			{
-				TrxId: id,
-				TransactionStatus:
-					verificationData.data.status === 'successful' ? 1 : 0,
-				FlutterReference: flw_ref,
-				PaymentUrl: paymentUrl,
-			},
-			{ where: { Reference: tx_ref } }
-		);
-
-		console.log('Transaction Update Result:', updateResult);
-
-		const customerEmail = customer.email;
-		const customerName = customer.name;
-
-		const plan =
-			transaction.TransactionType === 'subscribe'
-				? {
-						type: 'subscribe',
-						plans: [{ id: transaction.PlanId }],
-				  }
-				: {
-						type: 'reseller',
-						plans: await (async () => {
-							try {
-								console.log('Finding all transactions with tx_ref:', tx_ref);
-
-								const transactions = await Transactions.findAll({
-									where: { Reference: tx_ref },
-								});
-
-								console.log('Transactions found:', transactions);
-
-								// Extract plans from the backend and calculate quantity
-								return transactions.map((trx) => {
-									// Ensure plan is defined and valid JSON
-									if (!trx.plan) {
-										console.error(
-											'Missing plan data for transaction:',
-											trx.TransactionId
-										);
-										throw new Error(
-											`Plan details not found for transaction: ${trx.TransactionId}`
-										);
-									}
-
-									let planDetails;
-									try {
-										planDetails = JSON.parse(trx.plan).plans.find(
-											(plan) => plan.id === trx.PlanId
-										);
-									} catch (parseError) {
-										console.error(
-											'Error parsing plan data for transaction:',
-											trx.TransactionId,
-											parseError
-										);
-										throw new Error('Error parsing plan data');
-									}
-
-									if (!planDetails) {
-										console.error(
-											'Plan details not found for PlanId:',
-											trx.PlanId
-										);
-										throw new Error(
-											`Plan details not found for PlanId: ${trx.PlanId}`
-										);
-									}
-
-									return {
-										id: trx.PlanId,
-										quantity: trx.Amount / planDetails.price, // Use price from plans object
-									};
-								});
-							} catch (error) {
-								console.error('Error in findAll query:', error);
-								throw error;
-							}
-						})(),
-				  };
-
-		console.log('Plan Data:', plan);
-
-		if (plan.type === 'reseller') {
-			let emailContent = `Thank you for your purchase. Below are the details of your subscription:\n\n`;
-			for (const planItem of plan.plans) {
-				const planDetails = await fetchPlanDetails(planItem.id);
-				if (!planDetails) {
-					console.error('Plan not found:', planItem.id);
-					return res
-						.status(404)
-						.json({ error: `Plan ${planItem.id} not found` });
+			// Verify the transaction with Flutterwave
+			const verificationResponse = await fetch(
+				`https://api.flutterwave.com/v3/transactions/${transaction_id}/verify`,
+				{
+					method: 'GET',
+					headers: {
+						Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}`,
+						'Content-Type': 'application/json',
+					},
 				}
+			);
 
-				console.log('Plan Details:', planDetails);
+			const verificationData = await verificationResponse.json();
 
-				const decryptedCodes = await fetchAndUpdateCodes(
-					planItem.id,
-					planItem.quantity
-				);
-
-				console.log('Decrypted Codes:', decryptedCodes);
-
-				emailContent += `${customerName} - ${planDetails.PlanName} (${planDetails.Amount}):\n`;
-				decryptedCodes.forEach((code) => {
-					emailContent += `Code: ${code}\n`;
+			if (
+				verificationResponse.status !== 200 ||
+				verificationData.status !== 'success'
+			) {
+				console.error('Failed to verify transaction:', verificationData);
+				return res.status(500).json({
+					error: 'Failed to verify transaction',
+					details: verificationData,
 				});
 			}
-			await sendEmail(customerEmail, 'Your Subscription Codes', emailContent);
-		} else if (plan.type === 'subscribe') {
-			const planDetails = await fetchPlanDetails(plan.plans[0].id);
-			if (!planDetails) {
-				console.error('Plan not found:', plan.plans[0].id);
-				return res
-					.status(404)
-					.json({ error: `Plan ${plan.plans[0].id} not found` });
+
+			const { flw_ref, meta, id, customer } = verificationData.data;
+			const paymentUrl = meta?.__CheckoutInitAddress;
+
+			console.log('Verification Data:', verificationData);
+
+			const transaction = await Transactions.findOne({
+				where: { Reference: tx_ref },
+			});
+
+			if (!transaction) {
+				console.error('Transaction not found for reference:', tx_ref);
+				return res.status(404).json({ error: 'Transaction not found' });
 			}
-			const decryptedCode = (await fetchAndUpdateCodes(plan.plans[0].id, 1))[0];
-			const emailContent = `Thank you for your subscription. Below are your subscription details:\n\n${customerName} - ${planDetails.PlanName} (${planDetails.Amount}): ${decryptedCode}`;
-			await sendEmail(customerEmail, 'Your Subscription Code', emailContent);
-		} else {
-			return res.status(400).json({ error: 'Invalid payment type' });
+
+			await Transactions.update(
+				{
+					TrxId: id,
+					TransactionStatus:
+						verificationData.data.status === 'successful' ? 1 : 0,
+					FlutterReference: flw_ref,
+					PaymentUrl: paymentUrl,
+				},
+				{ where: { Reference: tx_ref } }
+			);
+
+			const customerEmail = customer.email;
+			const customerName = customer.name;
+
+			const plan =
+				transaction.TransactionType === 'subscribe'
+					? {
+							type: 'subscribe',
+							plans: [{ id: transaction.PlanId }],
+					  }
+					: {
+							type: 'reseller',
+							plans: await (async () => {
+								try {
+									console.log('Finding all transactions with tx_ref:', tx_ref);
+
+									const transactions = await Transactions.findAll({
+										where: { Reference: tx_ref },
+									});
+
+									console.log('Transactions found:', transactions);
+
+									return Promise.all(
+										transactions.map(async (trx) => {
+											if (!trx.PlanId || trx.amount === undefined) {
+												console.error(
+													'Missing PlanId or Amount for transaction:',
+													trx.TransactionId
+												);
+												throw new Error(
+													`Plan or Amount details not found for transaction: ${trx.TransactionId}`
+												);
+											}
+
+											// Fetch Plan details
+											const planDetails = await Plans.findOne({
+												where: { id: trx.PlanId },
+											});
+
+											if (!planDetails) {
+												console.error('Plan not found for PlanId:', trx.PlanId);
+												throw new Error(
+													`Plan not found for PlanId: ${trx.PlanId}`
+												);
+											}
+
+											// Reseller price calculation
+											const resellerPrice = planDetails.Amount - 200;
+
+											if (resellerPrice <= 0) {
+												throw new Error(
+													`Invalid reseller price calculated: ${resellerPrice}`
+												);
+											}
+
+											console.log(
+												`Calculating quantity for transaction ${trx.TransactionId}: Amount (${trx.amount}) / Reseller Price (${resellerPrice})`
+											);
+
+											return {
+												id: trx.PlanId,
+												quantity: Math.floor(trx.amount / resellerPrice),
+											};
+										})
+									);
+								} catch (error) {
+									console.error('Error in findAll query:', error);
+									throw error;
+								}
+							})(),
+					  };
+
+			console.log('Plan Data:', plan);
+
+			if (plan.type === 'reseller') {
+				let emailContent = `Thank you for your purchase. Below are the details of your subscription:\n\n`;
+				for (const planItem of plan.plans) {
+					const planDetails = await Plans.findOne({
+						where: { id: planItem.id },
+					});
+
+					if (!planDetails) {
+						console.error('Plan not found:', planItem.id);
+						return res
+							.status(404)
+							.json({ error: `Plan ${planItem.id} not found` });
+					}
+
+					const decryptedCodes = await fetchAndUpdateCodes(
+						planItem.id,
+						planItem.quantity
+					);
+
+					console.log('Decrypted Codes:', decryptedCodes);
+
+					emailContent += `${customerName} - ${planDetails.PlanName} (${planDetails.Amount}):\n`;
+					decryptedCodes.forEach((code) => {
+						emailContent += `Code: ${code}\n`;
+					});
+				}
+				await sendEmail(customerEmail, 'Your Subscription Codes', emailContent);
+			} else if (plan.type === 'subscribe') {
+				const planDetails = await Plans.findOne({
+					where: { id: plan.plans[0].id },
+				});
+				if (!planDetails) {
+					console.error('Plan not found:', plan.plans[0].id);
+					return res
+						.status(404)
+						.json({ error: `Plan ${plan.plans[0].id} not found` });
+				}
+				const decryptedCode = (
+					await fetchAndUpdateCodes(plan.plans[0].id, 1)
+				)[0];
+				const emailContent = `Thank you for your subscription. Below are your subscription details:\n\n${customerName} - ${planDetails.PlanName} (${planDetails.Amount}): ${decryptedCode}`;
+				await sendEmail(customerEmail, 'Your Subscription Code', emailContent);
+			} else {
+				return res.status(400).json({ error: 'Invalid payment type' });
+			}
+
+			const transactionData = {
+				reference: tx_ref,
+				status: verificationData.data.status,
+				amount: transaction.amount,
+				customerName: customer.name,
+				transactionId: id,
+				customerCreatedAt: customer.created_at,
+			};
+
+			const encodedData = Buffer.from(JSON.stringify(transactionData)).toString(
+				'base64'
+			);
+
+			const baseUrl = 'https://sapatv.vercel.app/payment-summary';
+
+			const shortUrl = `${baseUrl}?data=${encodeURIComponent(encodedData)}`;
+
+			console.log('Redirecting to:', shortUrl);
+
+			return res.redirect(shortUrl);
+		} catch (error) {
+			console.error('Internal server error:', error.message, error.stack);
+			return res.status(500).json({
+				error: 'Internal server error',
+				details: error.message,
+			});
 		}
-
-		const transactionData = {
-			reference: tx_ref,
-			status: verificationData.data.status,
-			amount: transaction.Amount,
-			customerName: customer.name,
-			transactionId: id,
-			customerCreatedAt: customer.created_at,
-		};
-
-		const encodedData = Buffer.from(JSON.stringify(transactionData)).toString(
-			'base64'
-		);
-
-		const baseUrl = 'https://sapatv.vercel.app/payment-summary';
-
-		const shortUrl = `${baseUrl}?data=${encodeURIComponent(encodedData)}`;
-
-		console.log('Redirecting to:', shortUrl);
-
-		return res.redirect(shortUrl);
-	} catch (error) {
-		console.error('Internal server error:', error.message, error.stack);
-		return res.status(500).json({
-			error: 'Internal server error',
-			details: error.message,
-		});
 	}
-});
+);
 
 // Start the server
 app.listen(PORT, () => {
